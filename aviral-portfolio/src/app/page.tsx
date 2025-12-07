@@ -4,10 +4,10 @@ import React, { useCallback, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Github, Linkedin, Mail, ArrowRight, Sparkles } from "lucide-react";
 
-// ✔ NEW v3 compatible particles wrapper
 import Particles from "@tsparticles/react";
 import type { Engine } from "@tsparticles/engine";
-import { loadFull } from "@tsparticles/all";
+import { loadFull } from "@tsparticles/full";
+
 
 /* ------------------------ Theme toggle ------------------------ */
 function ThemeToggle(): JSX.Element {
