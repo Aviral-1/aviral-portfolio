@@ -4,13 +4,16 @@ import React, { useCallback, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Github, Linkedin, Mail, ArrowRight, Sparkles } from "lucide-react";
 
-import Particles from "@tsparticles/react";
+// import Particles from "@tsparticles/react";
 import type { Engine } from "@tsparticles/engine";
-import { loadFull } from "@tsparticles/full";
+    // import { loadFull } from "@tsparticles/full";  // --- IGNORE ---
+import { loadFull } from "tsparticles";
+import Particles from "react-particles";
+
 
 
 /* ------------------------ Theme toggle ------------------------ */
-function ThemeToggle(): JSX.Element {
+const ThemeToggle = (): React.JSX.Element => {
   const themeRef = useRef<"dark" | "light">("light");
 
   useEffect(() => {
@@ -43,7 +46,7 @@ const useParticlesInit = () =>
   }, []);
 
 /* -------------------------- Main ------------------------------- */
-export default function Home(): JSX.Element {
+export default function Home(): React.JSX.Element  {
   const particlesInit = useParticlesInit();
 
   /* ------------------------ Cursor ------------------------ */
@@ -166,28 +169,29 @@ export default function Home(): JSX.Element {
       `}</style>
 
       {/* Particles */}
-      <Particles
-        id="particles"
-        init={particlesInit}
-        className="absolute inset-0 -z-20"
-        options={{
-          background: { color: "transparent" },
-          particles: {
-            number: { value: 50 },
-            color: { value: "#22c55e" },
-            links: {
-              enable: true,
-              distance: 140,
-              color: "#22c55e",
-              opacity: 0.2,
-              width: 1,
-            },
-            move: { enable: true, speed: 0.4 },
-            opacity: { value: 0.4 },
-            size: { value: { min: 1, max: 3 } },
-          },
-        }}
-      />
+     <Particles
+  id="particles"
+  init={particlesInit}
+  className="absolute inset-0 -z-20"
+  options={{
+    background: { color: "transparent" },
+    particles: {
+      number: { value: 50 },
+      color: { value: "#22c55e" },
+      links: {
+        enable: true,
+        distance: 140,
+        color: "#22c55e",
+        opacity: 0.2,
+        width: 1,
+      },
+      move: { enable: true, speed: 0.4 },
+      opacity: { value: 0.4 },
+      size: { value: { min: 1, max: 3 } },
+    },
+  }}
+/>
+
 
       {/* NAVBAR */}
       <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[92%] md:w-[80%] rounded-3xl bg-black/40 border border-white/5 backdrop-blur px-4 py-3 flex items-center justify-between gap-4">
