@@ -35,3 +35,24 @@ body {
 }
 
 
+:root {
+  --bg: #f8f9fa;
+  --text: #0a0a0a;
+  --card: rgba(255,255,255,0.5);
+  --accent: #10b981;
+}
+
+.dark {
+  --bg: #06070a;
+  --text: #e8e8e8;
+  --card: rgba(255,255,255,0.05);
+  --accent: #34d399;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.35s ease, color 0.35s ease;
+}
+
+
