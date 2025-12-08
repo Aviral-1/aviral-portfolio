@@ -1,0 +1,93 @@
+/* ------------------------------------------ */
+/* GLOBAL UI TOKENS */
+/* ------------------------------------------ */
+
+:root {
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-2: rgba(255, 255, 255, 0.02);
+  --neon: rgba(16,185,129,0.12);
+  --radius: 16px;
+}
+
+/* Light / Dark / Neon themes will override these later */
+html, body {
+  transition: background 0.35s ease, color 0.35s ease;
+}
+
+/* ------------------------------------------ */
+/* GLASS EFFECTS */
+/* ------------------------------------------ */
+
+.glass-card {
+  background: linear-gradient(180deg, var(--glass), var(--glass-2));
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px) saturate(120%);
+  border-radius: var(--radius);
+}
+
+.glass-nav {
+  background: rgba(8, 10, 12, 0.55);
+  border: 1px solid rgba(255,255,255,0.06);
+  backdrop-filter: blur(12px) saturate(140%);
+}
+
+/* ------------------------------------------ */
+/* NEON EFFECTS */
+/* ------------------------------------------ */
+
+.neon-outline {
+  box-shadow:
+    0 6px 30px rgba(16,185,129,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+.neon-text {
+  color: #4ef3b4;
+  text-shadow: 0 2px 18px rgba(16,185,129,0.25);
+}
+
+/* ------------------------------------------ */
+/* CARDS */
+/* ------------------------------------------ */
+
+.card {
+  transition: transform 0.36s cubic-bezier(.18,.9,.24,1);
+  will-change: transform;
+}
+
+.dark-card {
+  background: linear-gradient(180deg, #030405, #0b0c0e);
+  border-radius: var(--radius);
+  border: 1px solid rgba(16,185,129,0.08);
+}
+
+/* ------------------------------------------ */
+/* CURSOR */
+/* ------------------------------------------ */
+
+.cursor-dot {
+  pointer-events: none;
+  width: 20px;
+  height: 20px;
+  background: rgba(16,185,129,0.9);
+  border-radius: 50%;
+  position: fixed;
+  transform: translate3d(0,0,0);
+  will-change: transform;
+  box-shadow: 0 8px 30px rgba(16,185,129,0.18);
+  z-index: 9999;
+}
+
+/* ------------------------------------------ */
+/* GRADIENT TEXT */
+/* ------------------------------------------ */
+
+.gradient-title {
+  background-size: 200% 200%;
+  animation: gradient-slide 8s ease-in-out infinite alternate;
+}
+
+@keyframes gradient-slide {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
