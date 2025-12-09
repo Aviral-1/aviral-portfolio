@@ -169,28 +169,30 @@ export default function Home(): React.JSX.Element  {
       `}</style>
 
       {/* Particles */}
-     <Particles
-  id="particles"
-  init={particlesInit}
-  className="absolute inset-0 -z-20"
-  options={{
-    background: { color: "transparent" },
-    particles: {
-      number: { value: 50 },
-      color: { value: "#22c55e" },
-      links: {
-        enable: true,
-        distance: 140,
-        color: "#22c55e",
-        opacity: 0.2,
-        width: 1,
+    {particlesInit && (
+  <Particles
+    id="tsparticles"
+    className="absolute inset-0 -z-20"
+    options={{
+      background: { color: "transparent" },
+      particles: {
+        number: { value: 50 },
+        color: { value: "#22c55e" },
+        links: {
+          enable: true,
+          distance: 140,
+          color: "#22c55e",
+          opacity: 0.2,
+          width: 1,
+        },
+        move: { enable: true, speed: 0.4 },
+        opacity: { value: 0.4 },
+        size: { value: { min: 1, max: 3 } },
       },
-      move: { enable: true, speed: 0.4 },
-      opacity: { value: 0.4 },
-      size: { value: { min: 1, max: 3 } },
-    },
-  }}
-/>
+    }}
+  />
+)}
+
 
 
       {/* NAVBAR */}
