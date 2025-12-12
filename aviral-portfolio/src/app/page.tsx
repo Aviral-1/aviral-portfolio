@@ -104,14 +104,32 @@ export default function Page() {
           className="particles-layer"
           options={{
             fullScreen: { enable: false },
-            particles: {
-              number: { value: 40, density: { enable: true, area: 800 } },
-              color: { value: "#22c55e" },
-              links: { enable: true, distance: 120, color: "#22c55e", opacity: 0.14 },
-              move: { enable: true, speed: 0.45, outModes: "out" },
-              size: { value: { min: 1, max: 3 } },
-              opacity: { value: 0.5 },
-            },
+           particles: {
+  number: {
+    value: 45,
+    density: {
+      enable: true,
+      factor: 900,
+    },
+  },
+  move: {
+    enable: true,
+    speed: 0.25,
+    direction: "none",
+    outModes: "out",
+    straight: false,
+  },
+  links: {
+    enable: true,
+    distance: 140,
+    color: "#22c55e",
+    opacity: 0.12,
+    width: 1,
+  },
+  opacity: { value: { min: 0.15, max: 0.35 } },
+  size: { value: { min: 1, max: 3 } },
+}
+
           }}
           style={{ position: "fixed", inset: 0, zIndex: 1, pointerEvents: "none" }}
         />
