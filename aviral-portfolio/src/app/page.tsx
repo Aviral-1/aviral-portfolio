@@ -32,7 +32,7 @@ export default function Page() {
     const el = cursorRef.current;
     if (!el) return;
 
-    const pos = { x: window.innerWidth/2, y: window.innerHeight/2 };
+    const pos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
     let rx = pos.x, ry = pos.y;
     let raf = 0;
 
@@ -104,31 +104,31 @@ export default function Page() {
           className="particles-layer"
           options={{
             fullScreen: { enable: false },
-           particles: {
-  number: {
-    value: 45,
-    density: {
-      enable: true,
-      factor: 900,
-    },
-  },
-  move: {
-    enable: true,
-    speed: 0.25,
-    direction: "none",
-    outModes: "out",
-    straight: false,
-  },
-  links: {
-    enable: true,
-    distance: 140,
-    color: "#22c55e",
-    opacity: 0.12,
-    width: 1,
-  },
-  opacity: { value: { min: 0.15, max: 0.35 } },
-  size: { value: { min: 1, max: 3 } },
-}
+            particles: {
+              number: {
+                value: 45,
+                density: {
+                  enable: true,
+                  factor: 900,
+                },
+              },
+              move: {
+                enable: true,
+                speed: 0.25,
+                direction: "none",
+                outModes: "out",
+                straight: false,
+              },
+              links: {
+                enable: true,
+                distance: 140,
+                color: "#22c55e",
+                opacity: 0.12,
+                width: 1,
+              },
+              opacity: { value: { min: 0.15, max: 0.35 } },
+              size: { value: { min: 1, max: 3 } },
+            }
 
           }}
           style={{ position: "fixed", inset: 0, zIndex: 1, pointerEvents: "none" }}
@@ -139,7 +139,7 @@ export default function Page() {
         <nav className="navbar">
           <div className="brand">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-              <path d="M3 3 L18 6 L12 20 L3 3 Z" fill="#22c55e" opacity="0.95"/>
+              <path d="M3 3 L18 6 L12 20 L3 3 Z" fill="#22c55e" opacity="0.95" />
             </svg>
             <span>Aviral Mishra</span>
           </div>
@@ -157,7 +157,7 @@ export default function Page() {
         {/* HERO */}
         <section id="home" className="hero">
           <div className="left reveal">
-            <h1 className="hi">Hi, I’m <span style={{color:"white"}}>Aviral Mishra</span></h1>
+            <h1 className="hi">Hi, I’m <span style={{ color: "white" }}>Aviral Mishra</span></h1>
             <p className="lead">I build production-grade web applications focusing on performance, reliability, and developer experience.</p>
 
             <div className="cta-row">
@@ -199,8 +199,8 @@ export default function Page() {
         {/* SKILLS */}
         <section id="skills" className="section reveal">
           <h2>Skills</h2>
-          <div className="skills-grid" style={{marginTop:18}}>
-            {["Next.js","React","TypeScript","Node.js","Prisma","Postgres","MongoDB","Docker"].map(s => <div key={s} className="skill-pill">{s}</div>)}
+          <div className="skills-grid" style={{ marginTop: 18 }}>
+            {["Next.js", "React", "TypeScript", "Node.js", "Prisma", "Postgres", "MongoDB", "Docker"].map(s => <div key={s} className="skill-pill">{s}</div>)}
           </div>
         </section>
 
@@ -225,7 +225,7 @@ export default function Page() {
         {/* CONTACT */}
         <section id="contact" className="section reveal">
           <h2>Let’s Build</h2>
-          <div className="contact-grid" style={{marginTop:18}}>
+          <div className="contact-grid" style={{ marginTop: 18 }}>
             <form
               className="form"
               action="https://formsubmit.co/YOUR_EMAIL@example.com"
@@ -240,14 +240,14 @@ export default function Page() {
               <button type="submit">Send message</button>
             </form>
 
-            <div style={{padding:18, borderRadius:12, background:"linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.18))", border:"1px solid rgba(255,255,255,0.03)"}}>
+            <div style={{ padding: 18, borderRadius: 12, background: "linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.18))", border: "1px solid rgba(255,255,255,0.03)" }}>
               <h3>Contact details & review</h3>
-              <p style={{color:"#cfeee0"}}>Email: <strong style={{color:"#e6fff0"}}>YOUR_EMAIL@example.com</strong></p>
-              <p style={{marginTop:8}}>If you'd like a detailed project breakdown or quotation, drop your brief & I'll reply with timeline and cost estimate.</p>
+              <p style={{ color: "#cfeee0" }}>Email: <strong style={{ color: "#e6fff0" }}>YOUR_EMAIL@example.com</strong></p>
+              <p style={{ marginTop: 8 }}>If you'd like a detailed project breakdown or quotation, drop your brief & I'll reply with timeline and cost estimate.</p>
 
-              <div style={{marginTop:16}}>
-                <h4 style={{color:"#bff6d7"}}>Quick review summary</h4>
-                <ul style={{color:"#cfeee0", marginTop:8}}>
+              <div style={{ marginTop: 16 }}>
+                <h4 style={{ color: "#bff6d7" }}>Quick review summary</h4>
+                <ul style={{ color: "#cfeee0", marginTop: 8 }}>
                   <li>Performance-focused architecture</li>
                   <li>Observability & testing integrated</li>
                   <li>Scalable DB design (Postgres/Prisma)</li>
