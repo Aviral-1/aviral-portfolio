@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Aviral Mishra | Premium Portfolio",
-  description: "Full-stack engineer portfolio showcasing projects, skills, and contact.",
+  description: "Full-stack engineer portfolio",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
