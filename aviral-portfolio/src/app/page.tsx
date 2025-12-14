@@ -5,7 +5,7 @@ import { Github, Linkedin, Mail, ArrowUp } from "lucide-react";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 
-/* ---------------- TYPING LOOP ---------------- */
+/* Typing loop */
 const phrases = [
   "I build web applications",
   "I design clean interfaces",
@@ -16,81 +16,68 @@ const phrases = [
 function useTypingLoop() {
   const [text, setText] = useState("");
   const [index, setIndex] = useState(0);
-  const [deleting, setDeleting] = useState(false);
+  const [del, setDel] = useState(false);
 
   useEffect(() => {
     const current = phrases[index];
-    const speed = deleting ? 40 : 80;
+    const speed = del ? 40 : 80;
 
-    const timeout = setTimeout(() => {
-      setText((prev) =>
-        deleting
-          ? current.substring(0, prev.length - 1)
-          : current.substring(0, prev.length + 1)
+    const t = setTimeout(() => {
+      setText(prev =>
+        del ? current.slice(0, prev.length - 1) : current.slice(0, prev.length + 1)
       );
 
-      if (!deleting && text === current) {
-        setTimeout(() => setDeleting(true), 900);
-      } else if (deleting && text === "") {
-        setDeleting(false);
+      if (!del && text === current) setTimeout(() => setDel(true), 900);
+      if (del && text === "") {
+        setDel(false);
         setIndex((i) => (i + 1) % phrases.length);
       }
     }, speed);
 
-    return () => clearTimeout(timeout);
-  }, [text, deleting, index]);
+    return () => clearTimeout(t);
+  }, [text, del, index]);
 
   return text;
 }
 
-/* ---------------- MAIN ---------------- */
 export default function Page() {
-  const typedText = useTypingLoop();
+  const typed = useTypingLoop();
   const cursorRef = useRef<HTMLDivElement>(null);
-  const [particlesReady, setParticlesReady] = useState(false);
-  const [showTop, setShowTop] = useState(false);
+  const [particles, setParticles] = useState(false);
+  const [top, setTop] = useState(false);
 
-  /* Particles */
   useEffect(() => {
-    initParticlesEngine(async (engine) => {
-      await loadSlim(engine);
-    }).then(() => setParticlesReady(true));
+    initParticlesEngine(async (e) => loadSlim(e)).then(() => setParticles(true));
   }, []);
 
-  /* Cursor glow */
   useEffect(() => {
     const c = cursorRef.current!;
-    const pos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-    let x = pos.x, y = pos.y;
+    const p = { x: 0, y: 0 };
+    let x = 0, y = 0;
 
     const move = (e: PointerEvent) => {
-      pos.x = e.clientX;
-      pos.y = e.clientY;
+      p.x = e.clientX;
+      p.y = e.clientY;
     };
 
     window.addEventListener("pointermove", move);
-
     const loop = () => {
-      x += (pos.x - x) * 0.18;
-      y += (pos.y - y) * 0.18;
+      x += (p.x - x) * 0.2;
+      y += (p.y - y) * 0.2;
       c.style.transform = `translate(${x}px, ${y}px)`;
       requestAnimationFrame(loop);
     };
     loop();
-
     return () => window.removeEventListener("pointermove", move);
   }, []);
 
-  /* Scroll reveal + back to top */
   useEffect(() => {
     const io = new IntersectionObserver(
-      (entries) =>
-        entries.forEach((e) => e.isIntersecting && e.target.classList.add("show")),
+      e => e.forEach(i => i.isIntersecting && i.target.classList.add("show")),
       { threshold: 0.12 }
     );
-
-    document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
-    window.addEventListener("scroll", () => setShowTop(window.scrollY > 600));
+    document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+    window.addEventListener("scroll", () => setTop(window.scrollY > 600));
     return () => io.disconnect();
   }, []);
 
@@ -98,29 +85,10 @@ export default function Page() {
     <main>
       <div ref={cursorRef} className="cursor-glow" />
 
-      {particlesReady && (
-        <Particles
-          className="particles"
-          options={{
-            fullScreen: { enable: false },
-            particles: {
-              number: { value: 40 },
-              links: {
-                enable: true,
-                distance: 140,
-                opacity: 0.12,
-                color: "#22c55e",
-              },
-              move: { speed: 0.3 },
-              size: { value: { min: 1, max: 3 } },
-              opacity: { value: 0.3 },
-            },
-          }}
-        />
-      )}
+      {particles && <Particles className="particles" options={{ particles: { number: { value: 40 }}}} />}
 
       <nav className="navbar">
-        <span className="logo">▲ Aviral</span>
+        <strong>Aviral</strong>
         <div className="navlinks">
           <a href="#home">Home</a>
           <a href="#about">About</a>
@@ -131,83 +99,69 @@ export default function Page() {
       </nav>
 
       <section id="home" className="hero">
-        <h1 className="reveal">
-          Hi, I’m <span>Aviral Mishra</span>
-        </h1>
+        <div className="container reveal">
+          <h1>Hi, I’m <span>Aviral Mishra</span></h1>
+          <div className="typing">{typed}<span className="caret">|</span></div>
+          <p className="lead">Full-stack engineer focused on performance & scalability.</p>
 
-        <h2 className="typing reveal">
-          {typedText}
-          <span className="caret">|</span>
-        </h2>
+          <div className="cta">
+            <div className="btn primary">View Projects</div>
+            <div className="btn ghost">Contact</div>
+          </div>
 
-        <p className="lead reveal">
-          Full-stack engineer focused on performance, scalability & clean design.
-        </p>
-
-        <div className="cta reveal">
-          <a className="btn primary">View Projects</a>
-          <a className="btn ghost">Contact</a>
-        </div>
-
-        <div className="socials reveal">
-          <Github />
-          <Linkedin />
-          <Mail />
+          <div style={{ marginTop: 32 }}>
+            <Github /> <Linkedin /> <Mail />
+          </div>
         </div>
       </section>
 
       <section id="about" className="section reveal">
-        <h2>About Me</h2>
-        <p>
-          I build high-quality, scalable web systems with strong architecture,
-          testing and performance focus.
-        </p>
+        <div className="container section-header">
+          <h2>About Me</h2>
+          <p>I build scalable systems with clean architecture and strong UX.</p>
+        </div>
       </section>
 
       <section id="skills" className="section reveal">
-        <h2>Skills</h2>
-        <div className="grid">
-          {["Next.js", "React", "TypeScript", "Node.js", "Postgres", "Docker"].map(
-            (s) => (
-              <div key={s} className="pill">{s}</div>
-            )
-          )}
+        <div className="container">
+          <div className="section-header">
+            <h2>Skills</h2>
+          </div>
+          <div className="grid-3">
+            {["Next.js", "React", "TypeScript", "Node.js", "Docker", "Postgres"].map(s => (
+              <div key={s} className="card">{s}</div>
+            ))}
+          </div>
         </div>
       </section>
 
       <section id="projects" className="section reveal">
-        <h2>Projects</h2>
-        <div className="projects">
-          <div className="card">
-            <h3>Healvora</h3>
-            <p>Healthcare waste management platform</p>
+        <div className="container">
+          <div className="section-header">
+            <h2>Projects</h2>
           </div>
-          <div className="card">
-            <h3>Galaxy Portfolio</h3>
-            <p>3D interactive experience</p>
+          <div className="grid-2">
+            <div className="card">Healvora</div>
+            <div className="card">Galaxy Portfolio</div>
           </div>
         </div>
       </section>
 
       <section id="contact" className="section reveal">
-        <h2>Let’s Build</h2>
-        <form
-          className="form"
-          action="https://formsubmit.co/YOUR_EMAIL@example.com"
-          method="POST"
-        >
-          <input name="name" placeholder="Name" required />
-          <input name="email" type="email" placeholder="Email" required />
-          <textarea name="message" placeholder="Message" required />
-          <button type="submit">Send Message</button>
-        </form>
+        <div className="container">
+          <div className="section-header">
+            <h2>Contact</h2>
+          </div>
+          <form className="form">
+            <input placeholder="Name" />
+            <input placeholder="Email" />
+            <textarea placeholder="Message" />
+            <button className="btn primary">Send</button>
+          </form>
+        </div>
       </section>
 
-      {showTop && (
-        <button className="backtop" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
-          <ArrowUp />
-        </button>
-      )}
+      {top && <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}><ArrowUp /></button>}
 
       <footer>© {new Date().getFullYear()} Aviral Mishra</footer>
     </main>
