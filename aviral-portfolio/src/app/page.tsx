@@ -110,6 +110,21 @@ export default function Page() {
 }, []);
 
 
+const progressRef = useRef<HTMLDivElement | null>(null);
+
+useEffect(() => {
+  const onScroll = () => {
+    const h = document.documentElement;
+    const percent = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+    if (progressRef.current) {
+      progressRef.current.style.width = percent + "%";
+    }
+  };
+  window.addEventListener("scroll", onScroll);
+  return () => window.removeEventListener("scroll", onScroll);
+}, []);
+
+
   return (
     <main>
       <div ref={cursorRef} className="cursor-glow" />
