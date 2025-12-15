@@ -274,3 +274,21 @@ footer {
   z-index: 9999;
 }
 
+
+.section {
+  position: relative;
+  padding-top: 120px;
+}
+
+.section::before {
+  content: "";
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #22c55e, transparent);
+  transform: translateX(-50%);
+  opacity: 0.5;
+}
+
