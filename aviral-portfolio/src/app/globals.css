@@ -263,3 +263,14 @@ footer {
   will-change: transform;
 }
 
+
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0%;
+  background: linear-gradient(90deg, #22c55e, #3b82f6);
+  z-index: 9999;
+}
+
