@@ -95,6 +95,7 @@ export default function Page() {
   return (
     <main>
       <div ref={cursorRef} className="cursor-glow" />
+      <div className="page-wipe" aria-hidden />
 
       {particles && (
         <Particles
