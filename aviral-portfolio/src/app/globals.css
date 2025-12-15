@@ -243,3 +243,17 @@ footer {
     padding: 80px 0;
   }
 }
+
+
+.page-wipe {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, #22c55e, #000 60%);
+  z-index: 99999;
+  animation: wipeOut 1.2s ease forwards;
+}
+
+@keyframes wipeOut {
+  0% { clip-path: circle(120% at 50% 50%); }
+  100% { clip-path: circle(0% at 50% 50%); }
+}

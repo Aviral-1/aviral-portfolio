@@ -113,7 +113,7 @@ export default function Page() {
 
       {/* ================= NAV ================= */}
       <nav className="navbar">
-        <strong>Aviral</strong>
+        <strong>Aviral Mishra</strong>
         <div className="navlinks">
           <a href="#home">Home</a>
           <a href="#about">About</a>
