@@ -93,45 +93,63 @@ export default function Page() {
   }, []);
 
   useEffect(() => {
-  const magnets = document.querySelectorAll<HTMLElement>(".magnetic");
+    const magnets = document.querySelectorAll<HTMLElement>(".magnetic");
 
-  magnets.forEach(el => {
-    el.addEventListener("mousemove", (e) => {
-      const rect = el.getBoundingClientRect();
-      const x = e.clientX - rect.left - rect.width / 2;
-      const y = e.clientY - rect.top - rect.height / 2;
-      el.style.transform = `translate(${x * 0.25}px, ${y * 0.25}px)`;
+    magnets.forEach(el => {
+      el.addEventListener("mousemove", (e) => {
+        const rect = el.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        el.style.transform = `translate(${x * 0.25}px, ${y * 0.25}px)`;
+      });
+
+      el.addEventListener("mouseleave", () => {
+        el.style.transform = "translate(0,0)";
+      });
     });
+  }, []);
 
-    el.addEventListener("mouseleave", () => {
-      el.style.transform = "translate(0,0)";
+
+  const progressRef = useRef<HTMLDivElement | null>(null);
+  const labelRef = useRef<HTMLDivElement | null>(null);
+
+
+  useEffect(() => {
+    const onScroll = () => {
+      const h = document.documentElement;
+      const percent = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
+      if (progressRef.current) {
+        progressRef.current.style.width = percent + "%";
+      }
+    };
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+
+  useEffect(() => {
+    const label = labelRef.current;
+    if (!label) return;
+
+    const show = (text: string) => {
+      label.textContent = text;
+      label.style.opacity = "1";
+    };
+    const hide = () => label.style.opacity = "0";
+
+    document.querySelectorAll("a, button, .project").forEach(el => {
+      el.addEventListener("mouseenter", () => show("VIEW"));
+      el.addEventListener("mouseleave", hide);
     });
-  });
-}, []);
+  }, []);
 
-
-const progressRef = useRef<HTMLDivElement | null>(null);
-const labelRef = useRef<HTMLDivElement | null>(null);
-
-
-useEffect(() => {
-  const onScroll = () => {
-    const h = document.documentElement;
-    const percent = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
-    if (progressRef.current) {
-      progressRef.current.style.width = percent + "%";
-    }
-  };
-  window.addEventListener("scroll", onScroll);
-  return () => window.removeEventListener("scroll", onScroll);
-}, []);
 
 
   return (
     <main>
       <div ref={cursorRef} className="cursor-glow" />
       <div className="page-wipe" aria-hidden />
-<div ref={labelRef} className="cursor-label">VIEW</div>
+      <div ref={labelRef} className="cursor-label">VIEW</div>
 
       {particles && (
         <Particles
