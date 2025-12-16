@@ -331,3 +331,10 @@ footer {
   animation: floatNoise 14s ease-in-out infinite;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
