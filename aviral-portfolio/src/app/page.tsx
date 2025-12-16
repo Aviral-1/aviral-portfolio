@@ -158,6 +158,23 @@ export default function Page() {
   }, []);
 
 
+  const clickSound = typeof Audio !== "undefined"
+  ? new Audio("/click.mp3")
+  : null;
+
+useEffect(() => {
+  document.querySelectorAll("a, button").forEach(el => {
+    el.addEventListener("mouseenter", () => {
+      if (clickSound) {
+        clickSound.volume = 0.04;
+        clickSound.currentTime = 0;
+        clickSound.play().catch(() => {});
+      }
+    });
+  });
+}, []);
+
+
 
 
   return (
