@@ -24,7 +24,9 @@ function useTypingLoop() {
 
     const t = setTimeout(() => {
       setText((prev) =>
-        del ? current.slice(0, prev.length - 1) : current.slice(0, prev.length + 1)
+        del
+          ? current.slice(0, prev.length - 1)
+          : current.slice(0, prev.length + 1)
       );
 
       if (!del && text === current) setTimeout(() => setDel(true), 900);
@@ -44,12 +46,15 @@ function useTypingLoop() {
 export default function Page() {
   const typed = useTypingLoop();
   const cursorRef = useRef<HTMLDivElement>(null);
+  const labelRef = useRef<HTMLDivElement>(null);
   const [particles, setParticles] = useState(false);
   const [top, setTop] = useState(false);
 
   /* Particles */
   useEffect(() => {
-    initParticlesEngine(async (e) => loadSlim(e)).then(() => setParticles(true));
+    initParticlesEngine(async (e) => loadSlim(e)).then(() =>
+      setParticles(true)
+    );
   }, []);
 
   /* Cursor */
@@ -83,7 +88,7 @@ export default function Page() {
         entries.forEach(
           (e) => e.isIntersecting && e.target.classList.add("show")
         ),
-      { threshold: 0.12 }
+      { threshold: 0.15 }
     );
 
     document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
@@ -92,104 +97,23 @@ export default function Page() {
     return () => io.disconnect();
   }, []);
 
-  useEffect(() => {
-    const magnets = document.querySelectorAll<HTMLElement>(".magnetic");
-
-    magnets.forEach(el => {
-      el.addEventListener("mousemove", (e) => {
-        const rect = el.getBoundingClientRect();
-        const x = e.clientX - rect.left - rect.width / 2;
-        const y = e.clientY - rect.top - rect.height / 2;
-        el.style.transform = `translate(${x * 0.25}px, ${y * 0.25}px)`;
-      });
-
-      el.addEventListener("mouseleave", () => {
-        el.style.transform = "translate(0,0)";
-      });
-    });
-  }, []);
-
-
-  const progressRef = useRef<HTMLDivElement | null>(null);
-  const labelRef = useRef<HTMLDivElement | null>(null);
-
-
-  useEffect(() => {
-    const onScroll = () => {
-      const h = document.documentElement;
-      const percent = (h.scrollTop / (h.scrollHeight - h.clientHeight)) * 100;
-      if (progressRef.current) {
-        progressRef.current.style.width = percent + "%";
-      }
-    };
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-
+  /* Cursor label */
   useEffect(() => {
     const label = labelRef.current;
     if (!label) return;
 
-    const show = (text: string) => {
-      label.textContent = text;
-      label.style.opacity = "1";
-    };
-    const hide = () => label.style.opacity = "0";
+    const show = () => (label.style.opacity = "1");
+    const hide = () => (label.style.opacity = "0");
 
-    document.querySelectorAll("a, button, .project").forEach(el => {
-      el.addEventListener("mouseenter", () => show("VIEW"));
+    document.querySelectorAll("a, button").forEach((el) => {
+      el.addEventListener("mouseenter", show);
       el.addEventListener("mouseleave", hide);
     });
   }, []);
 
-  useEffect(() => {
-    const items = document.querySelectorAll<HTMLElement>(".parallax");
-
-    const onScroll = () => {
-      const y = window.scrollY;
-      items.forEach((el, i) => {
-        el.style.transform = `translateY(${y * (0.04 + i * 0.01)}px)`;
-      });
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-
-  const clickSound = typeof Audio !== "undefined"
-  ? new Audio("/click.mp3")
-  : null;
-
-useEffect(() => {
-  document.querySelectorAll("a, button").forEach(el => {
-    el.addEventListener("mouseenter", () => {
-      if (clickSound) {
-        clickSound.volume = 0.04;
-        clickSound.currentTime = 0;
-        clickSound.play().catch(() => {});
-      }
-    });
-  });
-}, []);
-
-useEffect(() => {
-  let last = performance.now();
-  const guard = () => {
-    const now = performance.now();
-    if (now - last < 16) requestAnimationFrame(guard);
-    last = now;
-  };
-  requestAnimationFrame(guard);
-}, []);
-
-
-
   return (
     <main>
       <div ref={cursorRef} className="cursor-glow" />
-      <div className="page-wipe" aria-hidden />
       <div ref={labelRef} className="cursor-label">VIEW</div>
 
       {particles && (
@@ -207,7 +131,7 @@ useEffect(() => {
         />
       )}
 
-      {/* ================= NAV ================= */}
+      {/* NAV */}
       <nav className="navbar">
         <strong>Aviral Mishra</strong>
         <div className="navlinks">
@@ -219,7 +143,7 @@ useEffect(() => {
         </div>
       </nav>
 
-      {/* ================= HERO ================= */}
+      {/* HERO */}
       <section id="home" className="hero">
         <div className="container reveal">
           <h1>
@@ -230,8 +154,8 @@ useEffect(() => {
             <span className="caret">|</span>
           </div>
           <p className="lead">
-            Full-stack engineer building fast, reliable and maintainable web
-            applications with modern technologies.
+            Full-stack engineer crafting fast, scalable and reliable
+            web applications with strong architecture.
           </p>
 
           <div className="cta">
@@ -243,96 +167,75 @@ useEffect(() => {
             </a>
           </div>
 
-          <div style={{ marginTop: 32 }}>
+          <div className="socials">
             <Github /> <Linkedin /> <Mail />
           </div>
         </div>
       </section>
 
-      {/* ================= ABOUT ================= */}
+      {/* ABOUT */}
       <section id="about" className="section reveal">
         <div className="container section-header">
           <h2>About Me</h2>
           <p>
-            I’m a full-stack developer with a strong focus on architecture,
-            performance, and clean user experience. I enjoy turning complex
-            problems into simple, scalable solutions.
+            I focus on building production-ready systems with clean UI,
+            strong backend design, and long-term scalability.
           </p>
         </div>
       </section>
 
-      {/* ================= WHAT I DO ================= */}
+      {/* WORK */}
       <section id="work" className="section reveal">
         <div className="container">
           <div className="section-header">
             <h2>What I Do</h2>
-            <p>End-to-end development with production mindset.</p>
+            <p>Engineering with performance and clarity in mind.</p>
           </div>
 
           <div className="grid-3">
             <div className="card">
-              <h3>Frontend Engineering</h3>
-              <p>
-                React, Next.js, TypeScript with a focus on accessibility,
-                performance and clean UI architecture.
-              </p>
+              <h3>Frontend</h3>
+              <p>React, Next.js, TypeScript, modern CSS.</p>
             </div>
-
             <div className="card">
-              <h3>Backend & APIs</h3>
-              <p>
-                Node.js, NestJS, Prisma, PostgreSQL — secure, scalable and
-                maintainable backend systems.
-              </p>
+              <h3>Backend</h3>
+              <p>Node.js, NestJS, Prisma, PostgreSQL.</p>
             </div>
-
             <div className="card">
-              <h3>System Design</h3>
-              <p>
-                Database modeling, API contracts, authentication, deployment and
-                CI/CD thinking.
-              </p>
+              <h3>Systems</h3>
+              <p>Architecture, CI/CD, deployments.</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ================= PROJECTS ================= */}
+      {/* PROJECTS */}
       <section id="projects" className="section reveal">
         <div className="container">
           <div className="section-header">
-            <h2>Featured Projects</h2>
-            <p>Real projects with real engineering decisions.</p>
+            <h2>Projects</h2>
+            <p>Real-world engineering work.</p>
           </div>
 
           <div className="grid-2">
             <div className="card">
               <h3>Healvora</h3>
-              <p>
-                Healthcare waste management platform with role-based access,
-                dashboards, and scalable backend architecture.
-              </p>
+              <p>Healthcare waste management platform.</p>
             </div>
-
             <div className="card">
               <h3>Galaxy Portfolio</h3>
-              <p>
-                Interactive 3D portfolio experiment using modern rendering and
-                performance-aware design.
-              </p>
+              <p>3D interactive portfolio experiment.</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ================= CONTACT ================= */}
+      {/* CONTACT */}
       <section id="contact" className="section reveal">
         <div className="container">
           <div className="section-header">
-            <h2>Let’s Work Together</h2>
-            <p>
-              Have a project, idea, or opportunity? I’d love to hear about it.
-            </p>
+            <h2>Let’s Build</h2>
+            <p>Have an idea or project? Let’s talk.</p>
           </div>
 
           <form className="form">
