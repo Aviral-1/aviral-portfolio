@@ -1,50 +1,120 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { Github, Linkedin, Mail } from "lucide-react";
+import { Github, Linkedin, Mail, ArrowUp } from "lucide-react";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 
-/* ================= DATA ================= */
-const projects = [
-  {
-    title: "Healvora",
-    desc: "Healthcare waste management platform",
-    details:
-      "Role-based dashboards, scalable backend, Prisma + PostgreSQL, audit logging.",
-  },
-  {
-    title: "Galaxy Portfolio",
-    desc: "3D interactive portfolio",
-    details:
-      "WebGL experiments, performance tuning, lazy loading, motion systems.",
-  },
+/* ================= TYPING LOOP ================= */
+const phrases = [
+  "I build scalable web applications",
+  "I design clean, usable interfaces",
+  "I optimize performance & DX",
+  "I engineer production systems",
 ];
 
-export default function Page() {
-  const cursorRef = useRef<HTMLDivElement>(null);
-  const [particles, setParticles] = useState(false);
-  const [active, setActive] = useState<any>(null);
+function useTypingLoop() {
+  const [text, setText] = useState("");
+  const [index, setIndex] = useState(0);
+  const [del, setDel] = useState(false);
 
+  useEffect(() => {
+    const current = phrases[index];
+    const speed = del ? 40 : 80;
+
+    const t = setTimeout(() => {
+      setText((prev) =>
+        del
+          ? current.slice(0, prev.length - 1)
+          : current.slice(0, prev.length + 1)
+      );
+
+      if (!del && text === current) setTimeout(() => setDel(true), 900);
+      if (del && text === "") {
+        setDel(false);
+        setIndex((i) => (i + 1) % phrases.length);
+      }
+    }, speed);
+
+    return () => clearTimeout(t);
+  }, [text, del, index]);
+
+  return text;
+}
+
+/* ================= PAGE ================= */
+export default function Page() {
+  const typed = useTypingLoop();
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const labelRef = useRef<HTMLDivElement>(null);
+  const [particles, setParticles] = useState(false);
+  const [top, setTop] = useState(false);
+
+  /* Particles */
   useEffect(() => {
     initParticlesEngine(async (e) => loadSlim(e)).then(() =>
       setParticles(true)
     );
   }, []);
 
+  /* Cursor */
   useEffect(() => {
     const c = cursorRef.current!;
-    let x = 0, y = 0;
-    window.addEventListener("pointermove", e => {
-      x += (e.clientX - x) * 0.15;
-      y += (e.clientY - y) * 0.15;
+    const p = { x: 0, y: 0 };
+    let x = 0,
+      y = 0;
+
+    const move = (e: PointerEvent) => {
+      p.x = e.clientX;
+      p.y = e.clientY;
+    };
+
+    window.addEventListener("pointermove", move);
+    const loop = () => {
+      x += (p.x - x) * 0.18;
+      y += (p.y - y) * 0.18;
       c.style.transform = `translate(${x}px, ${y}px)`;
+      requestAnimationFrame(loop);
+    };
+    loop();
+
+    return () => window.removeEventListener("pointermove", move);
+  }, []);
+
+  /* Scroll reveal + back to top */
+  useEffect(() => {
+    const io = new IntersectionObserver(
+      (entries) =>
+        entries.forEach(
+          (e) => e.isIntersecting && e.target.classList.add("show")
+        ),
+      { threshold: 0.15 }
+    );
+
+    document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+    window.addEventListener("scroll", () => setTop(window.scrollY > 600));
+
+    return () => io.disconnect();
+  }, []);
+
+  /* Cursor label */
+  useEffect(() => {
+    const label = labelRef.current;
+    if (!label) return;
+
+    const show = () => (label.style.opacity = "1");
+    const hide = () => (label.style.opacity = "0");
+
+    document.querySelectorAll("a, button").forEach((el) => {
+      el.addEventListener("mouseenter", show);
+      el.addEventListener("mouseleave", hide);
     });
   }, []);
 
   return (
     <main>
       <div ref={cursorRef} className="cursor-glow" />
+      <div ref={labelRef} className="cursor-label">VIEW</div>
 
       {particles && (
         <Particles
@@ -52,8 +122,10 @@ export default function Page() {
           options={{
             particles: {
               number: { value: 40 },
-              links: { enable: true, opacity: 0.1 },
+              links: { enable: true, distance: 140, opacity: 0.12 },
               move: { speed: 0.3 },
+              size: { value: { min: 1, max: 3 } },
+              opacity: { value: 0.3 },
             },
           }}
         />
@@ -63,26 +135,76 @@ export default function Page() {
       <nav className="navbar">
         <strong>Aviral Mishra</strong>
         <div className="navlinks">
+          <a href="#home">Home</a>
+          <a href="#about">About</a>
+          <a href="#work">Work</a>
           <a href="#projects">Projects</a>
-          <a href="/resume.pdf" target="_blank">Resume</a>
+          <a href="#contact">Contact</a>
         </div>
       </nav>
 
       {/* HERO */}
-      <section className="hero">
+      <section id="home" className="hero">
         <div className="container reveal">
-          <h1>Hi, I’m <span>Aviral Mishra</span></h1>
+          <h1>
+            Hi, I’m <span>Aviral Mishra</span>
+          </h1>
+          <div className="typing">
+            {typed}
+            <span className="caret">|</span>
+          </div>
           <p className="lead">
-            Full-stack engineer building scalable, production-ready web systems.
+            Full-stack engineer crafting fast, scalable and reliable
+            web applications with strong architecture.
           </p>
 
           <div className="cta">
-            <a href="#projects" className="btn primary">View Work</a>
-            <a href="/resume.pdf" className="btn ghost">Resume</a>
+            <a href="#projects" className="btn primary">
+              View Projects
+            </a>
+            <a href="#contact" className="btn ghost">
+              Contact Me
+            </a>
           </div>
 
           <div className="socials">
-            <Github /><Linkedin /><Mail />
+            <Github /> <Linkedin /> <Mail />
+          </div>
+        </div>
+      </section>
+
+      {/* ABOUT */}
+      <section id="about" className="section reveal">
+        <div className="container section-header">
+          <h2>About Me</h2>
+          <p>
+            I focus on building production-ready systems with clean UI,
+            strong backend design, and long-term scalability.
+          </p>
+        </div>
+      </section>
+
+      {/* WORK */}
+      <section id="work" className="section reveal">
+        <div className="container">
+          <div className="section-header">
+            <h2>What I Do</h2>
+            <p>Engineering with performance and clarity in mind.</p>
+          </div>
+
+          <div className="grid-3">
+            <div className="card">
+              <h3>Frontend</h3>
+              <p>React, Next.js, TypeScript, modern CSS.</p>
+            </div>
+            <div className="card">
+              <h3>Backend</h3>
+              <p>Node.js, NestJS, Prisma, PostgreSQL.</p>
+            </div>
+            <div className="card">
+              <h3>Systems</h3>
+              <p>Architecture, CI/CD, deployments.</p>
+            </div>
           </div>
         </div>
       </section>
@@ -92,31 +214,48 @@ export default function Page() {
         <div className="container">
           <div className="section-header">
             <h2>Projects</h2>
-            <p>Engineering-focused case studies.</p>
+            <p>Real-world engineering work.</p>
           </div>
 
           <div className="grid-2">
-            {projects.map(p => (
-              <div key={p.title} className="card" onClick={() => setActive(p)}>
-                <h3>{p.title}</h3>
-                <p>{p.desc}</p>
-              </div>
-            ))}
+            <div className="card">
+              <h3>Healvora</h3>
+              <p>Healthcare waste management platform.</p>
+            </div>
+            <div className="card">
+              <h3>Galaxy Portfolio</h3>
+              <p>3D interactive portfolio experiment.</p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* MODAL */}
-      {active && (
-        <div className="modal-backdrop" onClick={() => setActive(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
-            <h3>{active.title}</h3>
-            <p>{active.details}</p>
-            <button className="btn ghost" onClick={() => setActive(null)}>
-              Close
-            </button>
+      {/* CONTACT */}
+      <section id="contact" className="section reveal">
+        <div className="container">
+          <div className="section-header">
+            <h2>Let’s Build</h2>
+            <p>Have an idea or project? Let’s talk.</p>
           </div>
+
+          <form className="form">
+            <input placeholder="Your name" />
+            <input placeholder="Your email" />
+            <textarea placeholder="Tell me about your project" />
+            <button className="btn primary">Send Message</button>
+          </form>
         </div>
+      </section>
+
+      {top && (
+        <button
+          className="backtop"
+          onClick={() =>
+            window.scrollTo({ top: 0, behavior: "smooth" })
+          }
+        >
+          <ArrowUp />
+        </button>
       )}
 
       <footer>© {new Date().getFullYear()} Aviral Mishra</footer>
