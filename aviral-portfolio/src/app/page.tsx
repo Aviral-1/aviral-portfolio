@@ -174,6 +174,15 @@ useEffect(() => {
   });
 }, []);
 
+useEffect(() => {
+  let last = performance.now();
+  const guard = () => {
+    const now = performance.now();
+    if (now - last < 16) requestAnimationFrame(guard);
+    last = now;
+  };
+  requestAnimationFrame(guard);
+}, []);
 
 
 
