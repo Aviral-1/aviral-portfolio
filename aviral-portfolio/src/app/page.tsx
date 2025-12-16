@@ -143,6 +143,21 @@ export default function Page() {
     });
   }, []);
 
+  useEffect(() => {
+    const items = document.querySelectorAll<HTMLElement>(".parallax");
+
+    const onScroll = () => {
+      const y = window.scrollY;
+      items.forEach((el, i) => {
+        el.style.transform = `translateY(${y * (0.04 + i * 0.01)}px)`;
+      });
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+
 
 
   return (
