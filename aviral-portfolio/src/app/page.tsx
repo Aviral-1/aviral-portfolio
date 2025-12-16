@@ -111,6 +111,8 @@ export default function Page() {
 
 
 const progressRef = useRef<HTMLDivElement | null>(null);
+const labelRef = useRef<HTMLDivElement | null>(null);
+
 
 useEffect(() => {
   const onScroll = () => {
@@ -129,6 +131,7 @@ useEffect(() => {
     <main>
       <div ref={cursorRef} className="cursor-glow" />
       <div className="page-wipe" aria-hidden />
+<div ref={labelRef} className="cursor-label">VIEW</div>
 
       {particles && (
         <Particles
