@@ -1,12 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import {
-  Github,
-  Linkedin,
-  Mail,
-  ArrowUp,
-} from "lucide-react";
+import { Github, Linkedin, Mail, ArrowUp } from "lucide-react";
 import {
   motion,
   AnimatePresence,
@@ -55,11 +50,7 @@ function useTypingLoop() {
 }
 
 /* ================= MAGNETIC BUTTON ================= */
-function MagneticButton({
-  children,
-  className,
-  ...props
-}: any) {
+function MagneticButton({ children, className, ...props }: any) {
   const ref = useRef<HTMLButtonElement>(null);
   const reduce = useReducedMotion();
 
@@ -95,14 +86,46 @@ function MagneticButton({
   );
 }
 
+/* ================= TILT CARD ================= */
+function TiltCard({ children, className }: any) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  const move = (e: React.MouseEvent) => {
+    const el = ref.current;
+    if (!el) return;
+
+    const r = el.getBoundingClientRect();
+    const x = e.clientX - r.left;
+    const y = e.clientY - r.top;
+
+    const rx = -(y / r.height - 0.5) * 12;
+    const ry = (x / r.width - 0.5) * 12;
+
+    el.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) scale(1.05)`;
+  };
+
+  const reset = () => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.transform = "rotateX(0) rotateY(0) scale(1)";
+  };
+
+  return (
+    <div
+      ref={ref}
+      className={`tilt-card ${className}`}
+      onMouseMove={move}
+      onMouseLeave={reset}
+    >
+      {children}
+    </div>
+  );
+}
+
 /* ================= ANIMATION ================= */
 const fadeUp = {
   hidden: { opacity: 0, y: 40 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.8, ease: "easeOut" },
-  },
+  show: { opacity: 1, y: 0, transition: { duration: 0.8 } },
 };
 
 const sections = ["home", "about", "work", "projects", "contact"];
@@ -110,40 +133,28 @@ const sections = ["home", "about", "work", "projects", "contact"];
 /* ================= PAGE ================= */
 export default function Page() {
   const typed = useTypingLoop();
-  const cursorRef = useRef<HTMLDivElement>(null);
-  const labelRef = useRef<HTMLDivElement>(null);
   const [particles, setParticles] = useState(false);
   const [top, setTop] = useState(false);
   const [active, setActive] = useState("home");
 
-  /* Scroll progress */
   const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 120,
-    damping: 30,
-  });
+  const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 30 });
 
-  /* Particles */
+  /* Particles init */
   useEffect(() => {
-    initParticlesEngine(async (e) => loadSlim(e)).then(() =>
-      setParticles(true)
-    );
+    initParticlesEngine(async (e) => loadSlim(e)).then(() => setParticles(true));
   }, []);
 
-  /* Active nav */
+  /* Active nav + back to top */
   useEffect(() => {
     const onScroll = () => {
       const pos = window.scrollY + 120;
-
       sections.forEach((id) => {
         const el = document.getElementById(id);
         if (!el) return;
-
-        if (pos >= el.offsetTop && pos < el.offsetTop + el.offsetHeight) {
+        if (pos >= el.offsetTop && pos < el.offsetTop + el.offsetHeight)
           setActive(id);
-        }
       });
-
       setTop(window.scrollY > 600);
     };
 
@@ -153,56 +164,31 @@ export default function Page() {
 
   return (
     <main>
-      {/* Scroll progress */}
       <motion.div className="scroll-progress" style={{ scaleX }} />
 
-      {/* Cursor */}
-      <div ref={cursorRef} className="cursor-glow" />
-      <div ref={labelRef} className="cursor-label">VIEW</div>
-
-      {/* Particles */}
       {particles && (
-        <motion.div
+        <Particles
           className="particles"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 2 }}
-        >
-          <Particles
-            options={{
-              particles: {
-                number: { value: 40 },
-                links: { enable: true, distance: 140, opacity: 0.12 },
-                move: { speed: 0.3 },
-                size: { value: { min: 1, max: 3 } },
-                opacity: { value: 0.3 },
-              },
-            }}
-          />
-        </motion.div>
+          options={{
+            particles: {
+              number: { value: 40 },
+              move: { speed: 0.3 },
+              links: { enable: true, opacity: 0.15 },
+              opacity: { value: 0.35 },
+            },
+          }}
+        />
       )}
 
-      {/* NAVBAR */}
-      <motion.nav
-        className="navbar"
-        initial={{ y: -80, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-      >
+      {/* NAV */}
+      <motion.nav className="navbar" initial={{ y: -60 }} animate={{ y: 0 }}>
         <strong>Aviral Mishra</strong>
-
         <div className="navlinks">
           {sections.map((id) => (
-            <a
-              key={id}
-              href={`#${id}`}
-              className={active === id ? "active" : ""}
-            >
-              {id.charAt(0).toUpperCase() + id.slice(1)}
+            <a key={id} href={`#${id}`} className={active === id ? "active" : ""}>
+              {id.toUpperCase()}
               {active === id && (
-                <motion.span
-                  className="nav-indicator"
-                  layoutId="nav-indicator"
-                />
+                <motion.span className="nav-indicator" layoutId="nav" />
               )}
             </a>
           ))}
@@ -211,131 +197,54 @@ export default function Page() {
 
       {/* HERO */}
       <section id="home" className="hero">
-        <motion.div
-          className="container"
-          variants={fadeUp}
-          initial="hidden"
-          animate="show"
-        >
-          <h1>
-            Hi, I’m <span>Aviral Mishra</span>
-          </h1>
-
-          <div className="typing">
-            {typed}
-            <span className="caret">|</span>
-          </div>
-
-          <p className="lead">
-            Full-stack engineer crafting fast, scalable and reliable
-            web applications with strong architecture.
-          </p>
-
+        <motion.div className="container" variants={fadeUp} initial="hidden" animate="show">
+          <h1>Hi, I’m <span>Aviral Mishra</span></h1>
+          <div className="typing">{typed}<span className="caret">|</span></div>
+          <p className="lead">Full-stack engineer crafting scalable, elegant systems.</p>
           <div className="cta">
-            <MagneticButton className="btn primary">
-              View Projects
-            </MagneticButton>
-
-            <MagneticButton className="btn ghost">
-              Contact Me
-            </MagneticButton>
+            <MagneticButton className="btn primary">View Projects</MagneticButton>
+            <MagneticButton className="btn ghost">Contact Me</MagneticButton>
           </div>
-
-          <div className="socials">
-            <Github /> <Linkedin /> <Mail />
-          </div>
+          <div className="socials"><Github /><Linkedin /><Mail /></div>
         </motion.div>
       </section>
 
       {/* ABOUT */}
       <section id="about" className="section">
-        <motion.div
-          className="container section-header"
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true }}
-        >
+        <motion.div className="container" variants={fadeUp} initial="hidden" whileInView="show">
           <h2>About Me</h2>
-          <p>
-            I focus on building production-ready systems with clean UI,
-            strong backend design, and long-term scalability.
-          </p>
+          <p>I build production-grade web apps with performance & clarity.</p>
         </motion.div>
       </section>
 
       {/* WORK */}
-      <section id="work" className="section">
-        <motion.div
-          className="container grid-3"
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true }}
-        >
-          {["Frontend", "Backend", "Systems"].map((t) => (
-            <motion.div
-              key={t}
-              className="card"
-              whileHover={{ y: -10, scale: 1.03 }}
-            >
-              <h3>{t}</h3>
-            </motion.div>
-          ))}
-        </motion.div>
+      <section id="work" className="section grid-3">
+        {["Frontend", "Backend", "Systems"].map((t) => (
+          <TiltCard key={t} className="card glass"><h3>{t}</h3></TiltCard>
+        ))}
       </section>
 
       {/* PROJECTS */}
-      <section id="projects" className="section">
-        <motion.div
-          className="container grid-2"
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true }}
-        >
-          {["Healvora", "Galaxy Portfolio"].map((p) => (
-            <motion.div
-              key={p}
-              className="card"
-              whileHover={{ scale: 1.05 }}
-            >
-              <h3>{p}</h3>
-            </motion.div>
-          ))}
-        </motion.div>
+      <section id="projects" className="section grid-2">
+        {["Healvora", "Galaxy Portfolio"].map((p) => (
+          <TiltCard key={p} className="card glass"><h3>{p}</h3></TiltCard>
+        ))}
       </section>
 
       {/* CONTACT */}
       <section id="contact" className="section">
-        <motion.form
-          className="container form"
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true }}
-        >
+        <motion.form className="container form" variants={fadeUp} initial="hidden" whileInView="show">
           <input placeholder="Your name" />
           <input placeholder="Your email" />
           <textarea placeholder="Tell me about your project" />
-          <MagneticButton className="btn primary">
-            Send Message
-          </MagneticButton>
+          <MagneticButton className="btn primary">Send Message</MagneticButton>
         </motion.form>
       </section>
 
-      {/* BACK TO TOP */}
       <AnimatePresence>
         {top && (
-          <motion.button
-            className="backtop"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            exit={{ scale: 0 }}
-            onClick={() =>
-              window.scrollTo({ top: 0, behavior: "smooth" })
-            }
-          >
+          <motion.button className="backtop" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
             <ArrowUp />
           </motion.button>
         )}
