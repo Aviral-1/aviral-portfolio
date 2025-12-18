@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { Github, Linkedin, Mail, ArrowUp } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 
@@ -42,6 +43,22 @@ function useTypingLoop() {
   return text;
 }
 
+/* ================= ANIMATION VARIANTS ================= */
+const fadeUp = {
+  hidden: { opacity: 0, y: 40 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.8, ease: "easeOut" },
+  },
+};
+
+const stagger = {
+  show: {
+    transition: { staggerChildren: 0.15 },
+  },
+};
+
 /* ================= PAGE ================= */
 export default function Page() {
   const typed = useTypingLoop();
@@ -81,20 +98,11 @@ export default function Page() {
     return () => window.removeEventListener("pointermove", move);
   }, []);
 
-  /* Scroll reveal + back to top */
+  /* Back to top */
   useEffect(() => {
-    const io = new IntersectionObserver(
-      (entries) =>
-        entries.forEach(
-          (e) => e.isIntersecting && e.target.classList.add("show")
-        ),
-      { threshold: 0.15 }
-    );
-
-    document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
-    window.addEventListener("scroll", () => setTop(window.scrollY > 600));
-
-    return () => io.disconnect();
+    const onScroll = () => setTop(window.scrollY > 600);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   /* Cursor label */
@@ -132,7 +140,12 @@ export default function Page() {
       )}
 
       {/* NAV */}
-      <nav className="navbar">
+      <motion.nav
+        className="navbar"
+        initial={{ y: -80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.8 }}
+      >
         <strong>Aviral Mishra</strong>
         <div className="navlinks">
           <a href="#home">Home</a>
@@ -141,40 +154,67 @@ export default function Page() {
           <a href="#projects">Projects</a>
           <a href="#contact">Contact</a>
         </div>
-      </nav>
+      </motion.nav>
 
       {/* HERO */}
       <section id="home" className="hero">
-        <div className="container reveal">
-          <h1>
+        <motion.div
+          className="container hero-grid"
+          variants={stagger}
+          initial="hidden"
+          animate="show"
+        >
+          <motion.h1 variants={fadeUp}>
             Hi, I’m <span>Aviral Mishra</span>
-          </h1>
-          <div className="typing">
+          </motion.h1>
+
+          <motion.div className="typing" variants={fadeUp}>
             {typed}
             <span className="caret">|</span>
-          </div>
-          <p className="lead">
+          </motion.div>
+
+          <motion.p className="lead" variants={fadeUp}>
             Full-stack engineer crafting fast, scalable and reliable
             web applications with strong architecture.
-          </p>
+          </motion.p>
 
-          <div className="cta">
-            <a href="#projects" className="btn primary">
+          <motion.div className="cta" variants={fadeUp}>
+            <motion.a
+              href="#projects"
+              className="btn primary"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
               View Projects
-            </a>
-            <a href="#contact" className="btn ghost">
-              Contact Me
-            </a>
-          </div>
+            </motion.a>
 
-          <div className="socials">
-            <Github /> <Linkedin /> <Mail />
-          </div>
-        </div>
+            <motion.a
+              href="#contact"
+              className="btn ghost"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Contact Me
+            </motion.a>
+          </motion.div>
+
+          <motion.div className="socials" variants={fadeUp}>
+            <Github />
+            <Linkedin />
+            <Mail />
+          </motion.div>
+        </motion.div>
       </section>
 
       {/* ABOUT */}
-      <section id="about" className="section reveal">
+      <motion.section
+        id="about"
+        className="section"
+        variants={fadeUp}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true }}
+      >
         <div className="container section-header">
           <h2>About Me</h2>
           <p>
@@ -182,81 +222,113 @@ export default function Page() {
             strong backend design, and long-term scalability.
           </p>
         </div>
-      </section>
+      </motion.section>
 
       {/* WORK */}
-      <section id="work" className="section reveal">
+      <motion.section
+        id="work"
+        className="section"
+        variants={fadeUp}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true }}
+      >
         <div className="container">
-          <div className="section-header">
-            <h2>What I Do</h2>
-            <p>Engineering with performance and clarity in mind.</p>
-          </div>
-
           <div className="grid-3">
-            <div className="card">
-              <h3>Frontend</h3>
-              <p>React, Next.js, TypeScript, modern CSS.</p>
-            </div>
-            <div className="card">
-              <h3>Backend</h3>
-              <p>Node.js, NestJS, Prisma, PostgreSQL.</p>
-            </div>
-            <div className="card">
-              <h3>Systems</h3>
-              <p>Architecture, CI/CD, deployments.</p>
-            </div>
+            {["Frontend", "Backend", "Systems"].map((title) => (
+              <motion.div
+                key={title}
+                className="card"
+                whileHover={{ y: -12, scale: 1.03 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <h3>{title}</h3>
+                <p>
+                  {title === "Frontend" &&
+                    "React, Next.js, TypeScript, modern CSS."}
+                  {title === "Backend" &&
+                    "Node.js, NestJS, Prisma, PostgreSQL."}
+                  {title === "Systems" &&
+                    "Architecture, CI/CD, deployments."}
+                </p>
+              </motion.div>
+            ))}
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* PROJECTS */}
-      <section id="projects" className="section reveal">
-        <div className="container">
-          <div className="section-header">
-            <h2>Projects</h2>
-            <p>Real-world engineering work.</p>
-          </div>
-
-          <div className="grid-2">
-            <div className="card">
-              <h3>Healvora</h3>
-              <p>Healthcare waste management platform.</p>
-            </div>
-            <div className="card">
-              <h3>Galaxy Portfolio</h3>
-              <p>3D interactive portfolio experiment.</p>
-            </div>
-          </div>
+      <motion.section
+        id="projects"
+        className="section"
+        variants={fadeUp}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true }}
+      >
+        <div className="container grid-2">
+          {["Healvora", "Galaxy Portfolio"].map((p) => (
+            <motion.div
+              key={p}
+              className="card"
+              whileHover={{
+                scale: 1.05,
+                boxShadow: "0 40px 100px rgba(0,0,0,0.5)",
+              }}
+            >
+              <h3>{p}</h3>
+              <p>
+                {p === "Healvora"
+                  ? "Healthcare waste management platform."
+                  : "3D interactive portfolio experiment."}
+              </p>
+            </motion.div>
+          ))}
         </div>
-      </section>
+      </motion.section>
 
       {/* CONTACT */}
-      <section id="contact" className="section reveal">
+      <motion.section
+        id="contact"
+        className="section"
+        variants={fadeUp}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true }}
+      >
         <div className="container">
-          <div className="section-header">
-            <h2>Let’s Build</h2>
-            <p>Have an idea or project? Let’s talk.</p>
-          </div>
-
           <form className="form">
             <input placeholder="Your name" />
             <input placeholder="Your email" />
             <textarea placeholder="Tell me about your project" />
-            <button className="btn primary">Send Message</button>
+            <motion.button
+              className="btn primary"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Send Message
+            </motion.button>
           </form>
         </div>
-      </section>
+      </motion.section>
 
-      {top && (
-        <button
-          className="backtop"
-          onClick={() =>
-            window.scrollTo({ top: 0, behavior: "smooth" })
-          }
-        >
-          <ArrowUp />
-        </button>
-      )}
+      {/* BACK TO TOP */}
+      <AnimatePresence>
+        {top && (
+          <motion.button
+            className="backtop"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0 }}
+            whileHover={{ scale: 1.15 }}
+            onClick={() =>
+              window.scrollTo({ top: 0, behavior: "smooth" })
+            }
+          >
+            <ArrowUp />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       <footer>© {new Date().getFullYear()} Aviral Mishra</footer>
     </main>
