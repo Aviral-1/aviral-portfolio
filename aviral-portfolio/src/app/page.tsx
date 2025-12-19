@@ -1,12 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import {
-  Github,
-  Linkedin,
-  Mail,
-  ArrowUp,
-} from "lucide-react";
+import { Github, Linkedin, Mail, ArrowUp } from "lucide-react";
 import {
   motion,
   AnimatePresence,
@@ -14,6 +9,7 @@ import {
   useSpring,
   useReducedMotion,
 } from "framer-motion";
+import type { Variants } from "framer-motion";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 
@@ -55,11 +51,7 @@ function useTypingLoop() {
 }
 
 /* ================= MAGNETIC BUTTON ================= */
-function MagneticButton({
-  children,
-  className,
-  ...props
-}: any) {
+function MagneticButton({ children, className, ...props }: any) {
   const ref = useRef<HTMLButtonElement>(null);
   const reduce = useReducedMotion();
 
@@ -95,13 +87,18 @@ function MagneticButton({
   );
 }
 
-/* ================= ANIMATION ================= */
-const fadeUp = {
+/* ================= ANIMATIONS (TS SAFE) ================= */
+const easePremium = [0.16, 1, 0.3, 1];
+
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 40 },
   show: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.8, ease: "easeOut" },
+    transition: {
+      duration: 0.8,
+      ease: easePremium,
+    },
   },
 };
 
@@ -110,18 +107,43 @@ const sections = ["home", "about", "work", "projects", "contact"];
 /* ================= PAGE ================= */
 export default function Page() {
   const typed = useTypingLoop();
-  const cursorRef = useRef<HTMLDivElement>(null);
-  const labelRef = useRef<HTMLDivElement>(null);
   const [particles, setParticles] = useState(false);
   const [top, setTop] = useState(false);
   const [active, setActive] = useState("home");
+  const reduceMotion = useReducedMotion();
 
   /* Scroll progress */
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
-    stiffness: 120,
-    damping: 30,
+    stiffness: reduceMotion ? 200 : 120,
+    damping: reduceMotion ? 40 : 30,
   });
+
+  /* Scroll speed for particles */
+  const scrollSpeed = useRef(0);
+
+  useEffect(() => {
+    let last = window.scrollY;
+    const onScroll = () => {
+      const curr = window.scrollY;
+      scrollSpeed.current = Math.min(Math.abs(curr - last), 40);
+      last = curr;
+
+      const pos = curr + 120;
+      sections.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (pos >= el.offsetTop && pos < el.offsetTop + el.offsetHeight) {
+          setActive(id);
+        }
+      });
+
+      setTop(curr > 600);
+    };
+
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   /* Particles */
   useEffect(() => {
@@ -130,35 +152,10 @@ export default function Page() {
     );
   }, []);
 
-  /* Active nav */
-  useEffect(() => {
-    const onScroll = () => {
-      const pos = window.scrollY + 120;
-
-      sections.forEach((id) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-
-        if (pos >= el.offsetTop && pos < el.offsetTop + el.offsetHeight) {
-          setActive(id);
-        }
-      });
-
-      setTop(window.scrollY > 600);
-    };
-
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
     <main>
       {/* Scroll progress */}
       <motion.div className="scroll-progress" style={{ scaleX }} />
-
-      {/* Cursor */}
-      <div ref={cursorRef} className="cursor-glow" />
-      <div ref={labelRef} className="cursor-label">VIEW</div>
 
       {/* Particles */}
       {particles && (
@@ -166,16 +163,20 @@ export default function Page() {
           className="particles"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 2 }}
+          transition={{ duration: 1.5 }}
         >
           <Particles
             options={{
               particles: {
                 number: { value: 40 },
-                links: { enable: true, distance: 140, opacity: 0.12 },
-                move: { speed: 0.3 },
-                size: { value: { min: 1, max: 3 } },
+                links: { enable: true, opacity: 0.12 },
+                move: {
+                  speed: reduceMotion
+                    ? 0.2
+                    : 0.2 + scrollSpeed.current * 0.05,
+                },
                 opacity: { value: 0.3 },
+                size: { value: { min: 1, max: 3 } },
               },
             }}
           />
@@ -235,7 +236,6 @@ export default function Page() {
             <MagneticButton className="btn primary">
               View Projects
             </MagneticButton>
-
             <MagneticButton className="btn ghost">
               Contact Me
             </MagneticButton>
