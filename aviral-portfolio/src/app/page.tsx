@@ -74,25 +74,27 @@ function CustomCursor() {
     const move = (e: MouseEvent) => { cursorX.set(e.clientX); cursorY.set(e.clientY); };
     const down = () => setClicked(true);
     const up = () => setClicked(false);
+
+    // Optimized event delegation for hover detection
+    const handleOver = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest("a, button, .proj-card, .skill-card")) {
+        setHovered(true);
+      } else {
+        setHovered(false);
+      }
+    };
+
     window.addEventListener("mousemove", move);
     window.addEventListener("mousedown", down);
     window.addEventListener("mouseup", up);
-
-    const addHover = () => {
-      document.querySelectorAll("a,button,.proj-card,.skill-card").forEach(el => {
-        el.addEventListener("mouseenter", () => setHovered(true));
-        el.addEventListener("mouseleave", () => setHovered(false));
-      });
-    };
-    addHover();
-    const obs = new MutationObserver(addHover);
-    obs.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener("mouseover", handleOver);
 
     return () => {
       window.removeEventListener("mousemove", move);
       window.removeEventListener("mousedown", down);
       window.removeEventListener("mouseup", up);
-      obs.disconnect();
+      window.removeEventListener("mouseover", handleOver);
     };
   }, [cursorX, cursorY]);
 
@@ -180,8 +182,6 @@ function AuroraBg() {
     <div className="aurora-bg" aria-hidden>
       <div className="aurora-blob a1" />
       <div className="aurora-blob a2" />
-      <div className="aurora-blob a3" />
-      <div className="aurora-blob a4" />
       <div className="grid-overlay" />
     </div>
   );
@@ -198,11 +198,16 @@ const scaleIn: Variants = { hidden: { opacity: 0, scale: 0.88 }, show: { opacity
 function TiltCard({ children, className }: { children: React.ReactNode, className?: string }) {
   const x = useMotionValue(0);
   const y = useMotionValue(0);
+  const lastUpdate = useRef(0);
 
   const rotateX = useTransform(y, [-100, 100], [15, -15]);
   const rotateY = useTransform(x, [-100, 100], [-15, 15]);
 
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    const now = Date.now();
+    if (now - lastUpdate.current < 16) return; // ~60fps throttle
+    lastUpdate.current = now;
+
     const rect = event.currentTarget.getBoundingClientRect();
     const width = rect.width;
     const height = rect.height;
@@ -477,7 +482,19 @@ export default function Page() {
         {/* Particles */}
         {particles && (
           <motion.div className="ptcl" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2.5 }}>
-            <Particles options={{ particles: { number: { value: 38 }, links: { enable: true, opacity: 0.06, color: "#06b6d4" }, move: { speed: 0.2 }, opacity: { value: 0.18 }, size: { value: { min: 1, max: 2 } }, color: { value: "#06b6d4" } } }} />
+            <Particles
+              options={{
+                particles: {
+                  number: { value: isDesktop ? 38 : 15 },
+                  links: { enable: isDesktop, opacity: 0.06, color: "#06b6d4" },
+                  move: { speed: 0.2 },
+                  opacity: { value: 0.18 },
+                  size: { value: { min: 1, max: 2 } },
+                  color: { value: "#06b6d4" }
+                },
+                fpsLimit: 60
+              }}
+            />
           </motion.div>
         )}
 
