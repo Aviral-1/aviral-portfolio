@@ -373,8 +373,10 @@ export default function Page() {
     try {
       const res = await fetch("/api/reviews");
       if (res.ok) {
-        const data = await res.ok ? await res.json() : [];
+        const data = await res.json();
         setReviews(data.length > 0 ? data : INITIAL_TESTIMONIALS);
+      } else {
+        setReviews(INITIAL_TESTIMONIALS);
       }
     } catch (error) {
       console.error("Failed to fetch reviews:", error);
@@ -424,10 +426,15 @@ export default function Page() {
         f.reset();
         setImgPreview(null);
         alert("Thank you! Your review has been submitted successfully.");
+      } else {
+        const errorData = await res.json();
+        const errorMsg = errorData.error || "Submission failed. Please try again.";
+        alert(`Submission failed: ${errorMsg}`);
+        console.error("Submission failed:", errorMsg);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Submission failed:", error);
-      alert("Submission failed. Please try again.");
+      alert(`Submission failed: ${error.message || "An unexpected error occurred."}`);
     }
   };
 
