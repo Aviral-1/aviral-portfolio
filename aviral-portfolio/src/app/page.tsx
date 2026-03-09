@@ -949,7 +949,7 @@ export default function Page() {
                   <div className="ar-image-upload">
                     <label className="ar-img-label">
                       {imgPreview ? (
-                        <img src={imgPreview} alt="Preview" className="ar-img-preview" />
+                        <img src={imgPreview || undefined} alt="Preview" className="ar-img-preview" />
                       ) : (
                         <div className="ar-img-placeholder">
                           <Upload size={20} />
