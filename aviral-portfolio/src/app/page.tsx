@@ -37,11 +37,27 @@ import {
   useReducedMotion,
   useTransform,
   useMotionValue,
-  animate,
 } from "framer-motion";
 import type { Variants } from "framer-motion";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
+import {
+  FaReact,
+  FaNodeJs,
+  FaDocker,
+  FaAws,
+  FaGithub,
+  FaLinkedin,
+} from "react-icons/fa";
+import {
+  SiNextdotjs,
+  SiMongodb,
+  SiTypescript,
+  SiTailwindcss,
+  SiLeaflet,
+} from "react-icons/si";
+import { TbMap2 } from "react-icons/tb";
+import { MdAnalytics } from "react-icons/md";
 
 /* ========== CUSTOM CURSOR ========== */
 function CustomCursor() {
@@ -253,12 +269,12 @@ const INITIAL_TESTIMONIALS = [
 
 /* ========== SKILL DATA ========== */
 const skillGroups = [
-  { icon: <Monitor size={18} />, label: "Frontend", color: "#06b6d4", skills: ["React.js", "JavaScript ES6+", "HTML5", "CSS3", "Tailwind CSS", "Bootstrap"] },
-  { icon: <Server size={18} />, label: "Backend & DB", color: "#8b5cf6", skills: ["Node.js", "Express.js", "NestJS", "MongoDB", "PostgreSQL", "Prisma", "Mongoose"] },
-  { icon: <BarChart2 size={18} />, label: "Analytics", color: "#f59e0b", skills: ["Recharts", "ApexCharts", "Chart.js", "KPI Dashboards", "Real-time Metrics"] },
-  { icon: <Map size={18} />, label: "GIS & Maps", color: "#10b981", skills: ["Google Maps API", "React Google Maps", "Leaflet", "GeoJSON", "Heatmaps", "Clusters"] },
-  { icon: <Code2 size={18} />, label: "Frameworks", color: "#ec4899", skills: ["Next.js", "REST APIs", "Responsive UI", "Component Architecture", "JWT Auth"] },
-  { icon: <Wrench size={18} />, label: "DevOps & Cloud", color: "#f97316", skills: ["Git", "GitHub", "Docker", "AWS EC2/S3", "AWS Amplify", "Linux CLI", "Figma"] },
+  { icon: <FaReact size={22} />, label: "Frontend", color: "#06b6d4", glowColor: "rgba(6,182,212,0.15)", shadowColor: "rgba(6,182,212,0.12)", skills: ["React.js", "JavaScript ES6+", "HTML5", "CSS3", "Tailwind CSS", "Bootstrap"] },
+  { icon: <FaNodeJs size={22} />, label: "Backend & DB", color: "#8b5cf6", glowColor: "rgba(139,92,246,0.15)", shadowColor: "rgba(139,92,246,0.12)", skills: ["Node.js", "Express.js", "NestJS", "MongoDB", "PostgreSQL", "Prisma", "Mongoose"] },
+  { icon: <MdAnalytics size={22} />, label: "Analytics", color: "#f59e0b", glowColor: "rgba(245,158,11,0.15)", shadowColor: "rgba(245,158,11,0.12)", skills: ["Recharts", "ApexCharts", "Chart.js", "KPI Dashboards", "Real-time Metrics"] },
+  { icon: <TbMap2 size={22} />, label: "GIS & Maps", color: "#10b981", glowColor: "rgba(16,185,129,0.15)", shadowColor: "rgba(16,185,129,0.12)", skills: ["Google Maps API", "React Google Maps", "Leaflet", "GeoJSON", "Heatmaps", "Clusters"] },
+  { icon: <SiNextdotjs size={22} />, label: "Frameworks", color: "#ec4899", glowColor: "rgba(236,72,153,0.15)", shadowColor: "rgba(236,72,153,0.12)", skills: ["Next.js", "REST APIs", "Responsive UI", "Component Architecture", "JWT Auth"] },
+  { icon: <FaDocker size={22} />, label: "DevOps & Cloud", color: "#f97316", glowColor: "rgba(249,115,22,0.15)", shadowColor: "rgba(249,115,22,0.12)", skills: ["Git", "GitHub", "Docker", "AWS EC2/S3", "AWS Amplify", "Linux CLI", "Figma"] },
 ];
 
 /* ========== PROJECT DATA ========== */
@@ -564,11 +580,7 @@ export default function Page() {
               transition={{ duration: 1, ease, delay: 0.15 }}
             >
               <div className="avatar-ring">
-                <motion.div
-                  className="avatar-glow"
-                  animate={{ scale: [1, 1.12, 1], opacity: [0.5, 0.85, 0.5] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                />
+                <div className="avatar-glow" />
                 <Image src="/avatar.png" alt="Aviral Mishra" width={300} height={300} className="avatar-img" priority />
                 <motion.div
                   className="orbit-ring or1"
@@ -580,6 +592,31 @@ export default function Page() {
                   animate={{ rotate: -360 }}
                   transition={{ duration: 26, repeat: Infinity, ease: "linear" }}
                 />
+
+                {/* Rotating tech icons on or1 */}
+                {[
+                  { Icon: FaReact, color: "#06b6d4", angle: 0 },
+                  { Icon: SiNextdotjs, color: "#fff", angle: 90 },
+                  { Icon: SiMongodb, color: "#10b981", angle: 180 },
+                  { Icon: SiTypescript, color: "#8b5cf6", angle: 270 },
+                ].map(({ Icon, color, angle }, i) => (
+                  <motion.div
+                    key={i}
+                    className="orbit-icon"
+                    style={{ "--angle": `${angle}deg` } as React.CSSProperties}
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 16, repeat: Infinity, ease: "linear" }}
+                  >
+                    <motion.div
+                      className="orbit-icon-inner"
+                      animate={{ rotate: -360 }}
+                      transition={{ duration: 16, repeat: Infinity, ease: "linear" }}
+                      style={{ color, filter: `drop-shadow(0 0 6px ${color})` }}
+                    >
+                      <Icon size={16} />
+                    </motion.div>
+                  </motion.div>
+                ))}
 
                 {/* Animated floating chips */}
                 <motion.div
@@ -687,14 +724,19 @@ export default function Page() {
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.08, duration: 0.55 }}
                     viewport={{ once: true }}
+                    style={{
+                      "--sk-card-glow": `radial-gradient(ellipse at 0% 0%, ${sg.glowColor}, transparent 60%)`,
+                      "--sk-card-color": sg.color + "66",
+                      "--sk-card-shadow": sg.shadowColor,
+                    } as React.CSSProperties}
                   >
                     <div className="sk-head">
-                      <div className="sk-icon" style={{ color: sg.color, background: sg.color + "14", borderColor: sg.color + "30" }}>{sg.icon}</div>
+                      <div className="sk-icon" style={{ color: sg.color, background: sg.color + "18", borderColor: sg.color + "40" }}>{sg.icon}</div>
                       <span className="sk-label" style={{ color: sg.color }}>{sg.label}</span>
                     </div>
                     <div className="sk-chips">
                       {sg.skills.map(s => (
-                        <motion.span key={s} className="sk-chip" whileHover={{ scale: 1.08 }}>{s}</motion.span>
+                        <motion.span key={s} className="sk-chip" whileHover={{ scale: 1.08, color: sg.color }}>{s}</motion.span>
                       ))}
                     </div>
                   </motion.div>
@@ -1015,13 +1057,29 @@ export default function Page() {
 
         {/* ========= FOOTER ========= */}
         <footer className="footer">
-          <div className="container ft-inner">
-            <div className="ft-left">
-              <span className="logo-sq sm">AM</span>
-              <span className="ft-name">Aviral Mishra</span>
+          <div className="container">
+            <div className="footer-divider" />
+            <div className="ft-inner">
+              <div className="ft-left">
+                <span className="logo-sq sm">AM</span>
+                <span className="ft-name">Aviral Mishra</span>
+              </div>
+              <p className="ft-quote">⚡ <em>&quot;Build things. Break things. Learn faster.&quot;</em></p>
+              <div className="ft-right" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                <div className="ft-socials">
+                  <a href="https://github.com/Aviral-1" target="_blank" rel="noopener noreferrer" className="ft-social-link" title="GitHub">
+                    <FaGithub size={16} />
+                  </a>
+                  <a href="https://linkedin.com/in/aviral-mishra" target="_blank" rel="noopener noreferrer" className="ft-social-link" title="LinkedIn">
+                    <FaLinkedin size={16} />
+                  </a>
+                  <a href="mailto:aviralsul2000@gmail.com" className="ft-social-link" title="Email">
+                    <Mail size={16} />
+                  </a>
+                </div>
+                <p className="ft-copy">© {new Date().getFullYear()} Aviral Mishra</p>
+              </div>
             </div>
-            <p className="ft-quote">⚡ <em>&quot;Build things. Break things. Learn faster.&quot;</em></p>
-            <p className="ft-copy">© {new Date().getFullYear()} Aviral Mishra</p>
           </div>
         </footer>
 
