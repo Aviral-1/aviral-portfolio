@@ -366,13 +366,21 @@ export default function Page() {
 
   useEffect(() => {
     setMounted(true);
-    const saved = localStorage.getItem("aviral_reviews");
-    if (saved) {
-      setReviews(JSON.parse(saved));
-    } else {
+    fetchReviews();
+  }, []);
+
+  const fetchReviews = async () => {
+    try {
+      const res = await fetch("/api/reviews");
+      if (res.ok) {
+        const data = await res.ok ? await res.json() : [];
+        setReviews(data.length > 0 ? data : INITIAL_TESTIMONIALS);
+      }
+    } catch (error) {
+      console.error("Failed to fetch reviews:", error);
       setReviews(INITIAL_TESTIMONIALS);
     }
-  }, []);
+  };
 
   const handleImgChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -383,7 +391,7 @@ export default function Page() {
     }
   };
 
-  const handleAddReview = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddReview = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const f = e.currentTarget;
     const name = (f.elements.namedItem("name") as HTMLInputElement).value;
@@ -404,11 +412,23 @@ export default function Page() {
       avatar: name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
     };
 
-    const updated = [newReview, ...reviews];
-    setReviews(updated);
-    localStorage.setItem("aviral_reviews", JSON.stringify(updated));
-    f.reset();
-    setImgPreview(null);
+    try {
+      const res = await fetch("/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newReview),
+      });
+
+      if (res.ok) {
+        fetchReviews();
+        f.reset();
+        setImgPreview(null);
+        alert("Thank you! Your review has been submitted successfully.");
+      }
+    } catch (error) {
+      console.error("Submission failed:", error);
+      alert("Submission failed. Please try again.");
+    }
   };
 
   useEffect(() => {
@@ -617,32 +637,6 @@ export default function Page() {
                     </motion.div>
                   </motion.div>
                 ))}
-
-                {/* Animated floating chips */}
-                <motion.div
-                  className="fchip fc-tl"
-                  animate={{ y: [0, -12, 0] }}
-                  transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <Zap size={14} className="fchip-icon" />
-                  <div><span className="fchip-n">3+</span><span className="fchip-l">Yrs XP</span></div>
-                </motion.div>
-                <motion.div
-                  className="fchip fc-bl"
-                  animate={{ y: [0, 10, 0] }}
-                  transition={{ duration: 3.8, repeat: Infinity, ease: "easeInOut", delay: 0.7 }}
-                >
-                  <Globe size={14} className="fchip-icon emerald" />
-                  <div><span className="fchip-n">5+</span><span className="fchip-l">Cities</span></div>
-                </motion.div>
-                <motion.div
-                  className="fchip fc-br"
-                  animate={{ y: [0, -9, 0] }}
-                  transition={{ duration: 4.4, repeat: Infinity, ease: "easeInOut", delay: 1.3 }}
-                >
-                  <Activity size={14} className="fchip-icon pink" />
-                  <div><span className="fchip-n">40%</span><span className="fchip-l">Faster</span></div>
-                </motion.div>
               </div>
             </motion.div>
           </motion.div>
@@ -666,24 +660,15 @@ export default function Page() {
               <motion.div variants={fadeUp}>
                 <h2>Crafting <span className="grad-text">scalable UIs</span><br />for real-world impact</h2>
                 <p className="about-p" style={{ marginTop: "1.25rem" }}>
-                  I&apos;m a Software Engineer at <strong className="hl-cyan">Dvertex Info Tech Pvt. Ltd.</strong> where
-                  I architect production-ready dashboards and GIS-driven systems for smart-city platforms
+                  I&apos;m a <span className="hl-cyan">Software Engineer</span> at <strong className="hl-cyan">Dvertex Info Tech Pvt. Ltd.</strong> where
+                  I architect <span className="hl-cyan">production-ready dashboards</span> and <span className="hl-cyan">GIS-driven systems</span> for smart-city platforms
                   serving millions of citizens across India.
                 </p>
                 <p className="about-p">
                   My strength lies in <span className="hl-cyan">reusable component libraries</span>, real-time
-                  data visualizations, scalable mapping solutions, and robust export pipelines. Currently
-                  leveling up in full-stack — NestJS, Next.js, and cloud deployment.
+                  <span className="hl-cyan"> data visualizations</span>, scalable <span className="hl-cyan">mapping solutions</span>, and robust <span className="hl-cyan">export pipelines</span>. Currently
+                  leveling up in full-stack — <span className="hl-cyan">NestJS</span>, <span className="hl-cyan">Next.js</span>, and <span className="hl-cyan">cloud deployment</span>.
                 </p>
-
-                <div className="stat-grid">
-                  {[{ n: "3+", l: "Years Exp." }, { n: "5+", l: "Cities" }, { n: "3", l: "Platforms" }, { n: "40%", l: "Dev Faster" }].map(s => (
-                    <motion.div key={s.l} className="stat-card" whileHover={{ y: -4, scale: 1.04 }}>
-                      <span className="stat-n">{s.n}</span>
-                      <span className="stat-l">{s.l}</span>
-                    </motion.div>
-                  ))}
-                </div>
               </motion.div>
 
               <motion.div variants={fadeUp} className="tl-col">
@@ -709,7 +694,7 @@ export default function Page() {
         </section>
 
         {/* ========= SKILLS ========= */}
-        <section id="skills" className="section sec-alt">
+        <section id="skills" className="section sec-alt" >
           <motion.div className="container" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.08 }}>
             <motion.p variants={fadeUp} className="eyebrow">02 — Tech Stack</motion.p>
             <motion.h2 variants={fadeUp} className="sec-h2">Tools & Technologies</motion.h2>
@@ -751,7 +736,7 @@ export default function Page() {
         </section>
 
         {/* ========= EXPERIENCE ========= */}
-        <section id="experience" className="section">
+        <section id="experience" className="section" >
           <motion.div className="container" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.08 }}>
             <motion.p variants={fadeUp} className="eyebrow">03 — Experience</motion.p>
             <motion.h2 variants={fadeUp} className="sec-h2">Professional Journey</motion.h2>
@@ -798,7 +783,7 @@ export default function Page() {
         </section>
 
         {/* ========= PROJECTS ========= */}
-        <section id="projects" className="section sec-alt">
+        <section id="projects" className="section sec-alt" >
           <motion.div className="container" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.05 }}>
             <motion.p variants={fadeUp} className="eyebrow">04 — Projects</motion.p>
             <motion.h2 variants={fadeUp} className="sec-h2">Key Projects</motion.h2>
@@ -918,7 +903,7 @@ export default function Page() {
         </section>
 
         {/* ========= REVIEWS ========= */}
-        <section id="reviews" className="section">
+        <section id="reviews" className="section" >
           <motion.div className="container" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.08 }}>
             <motion.p variants={fadeUp} className="eyebrow">05 — Reviews</motion.p>
             <motion.h2 variants={fadeUp} className="sec-h2">What People Say</motion.h2>
@@ -1098,7 +1083,7 @@ export default function Page() {
             </motion.button>
           )}
         </AnimatePresence>
-      </main>
+      </main >
     </>
   );
 }
