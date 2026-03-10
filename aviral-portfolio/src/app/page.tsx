@@ -75,8 +75,13 @@ function CustomCursor() {
     const down = () => setClicked(true);
     const up = () => setClicked(false);
 
-    // Optimized event delegation for hover detection
+    // Throttled event delegation for hover detection
+    let lastHoverUpdate = 0;
     const handleOver = (e: MouseEvent) => {
+      const now = Date.now();
+      if (now - lastHoverUpdate < 64) return; 
+      lastHoverUpdate = now;
+
       const target = e.target as HTMLElement;
       if (target.closest("a, button, .proj-card, .skill-card")) {
         setHovered(true);
@@ -205,7 +210,7 @@ function TiltCard({ children, className }: { children: React.ReactNode, classNam
 
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
     const now = Date.now();
-    if (now - lastUpdate.current < 16) return; // ~60fps throttle
+    if (now - lastUpdate.current < 32) return; // ~30fps throttle for tilt
     lastUpdate.current = now;
 
     const rect = event.currentTarget.getBoundingClientRect();
@@ -451,7 +456,12 @@ export default function Page() {
   }, []);
 
   useEffect(() => {
+    let lastScrollPos = 0;
     const onScroll = () => {
+      const now = Date.now();
+      if (now - lastScrollPos < 50) return; // Throttle scroll calculations
+      lastScrollPos = now;
+
       const pos = window.scrollY + 140;
       navItems.forEach(id => {
         const el = document.getElementById(id);
@@ -485,14 +495,14 @@ export default function Page() {
             <Particles
               options={{
                 particles: {
-                  number: { value: isDesktop ? 38 : 15 },
-                  links: { enable: isDesktop, opacity: 0.06, color: "#06b6d4" },
-                  move: { speed: 0.2 },
-                  opacity: { value: 0.18 },
-                  size: { value: { min: 1, max: 2 } },
+                  number: { value: isDesktop ? 20 : 10 },
+                  links: { enable: isDesktop, opacity: 0.04, color: "#06b6d4" },
+                  move: { speed: 0.15 },
+                  opacity: { value: 0.15 },
+                  size: { value: { min: 1, max: 1.5 } },
                   color: { value: "#06b6d4" }
                 },
-                fpsLimit: 60
+                fpsLimit: 30
               }}
             />
           </motion.div>
