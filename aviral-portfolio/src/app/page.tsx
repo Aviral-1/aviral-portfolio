@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import {
   Github,
   Linkedin,
@@ -10,24 +11,13 @@ import {
   MapPin,
   Phone,
   ExternalLink,
-  Code2,
-  BarChart2,
-  Map,
-  Server,
-  Monitor,
-  Wrench,
   ChevronRight,
   Briefcase,
   GraduationCap,
   X,
   Menu,
-  Sparkles,
   Heart,
-  Zap,
-  Globe,
   Cpu,
-  Activity,
-  Upload,
 } from "lucide-react";
 import {
   motion,
@@ -45,7 +35,6 @@ import {
   FaReact,
   FaNodeJs,
   FaDocker,
-  FaAws,
   FaGithub,
   FaLinkedin,
 } from "react-icons/fa";
@@ -53,11 +42,40 @@ import {
   SiNextdotjs,
   SiMongodb,
   SiTypescript,
-  SiTailwindcss,
-  SiLeaflet,
 } from "react-icons/si";
 import { TbMap2 } from "react-icons/tb";
 import { MdAnalytics } from "react-icons/md";
+import type { ReviewData } from "@/components/ReviewList";
+
+// Dynamic imports — code split & no SSR (these are client-interactive)
+const ReviewList = dynamic(() => import("@/components/ReviewList"), {
+  ssr: false,
+  loading: () => (
+    <div className="rl-grid" style={{ marginTop: "2rem" }}>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="rl-card rl-skeleton" aria-hidden>
+          <div className="rl-sk-line rl-sk-line--long" />
+          <div className="rl-sk-line rl-sk-line--med" />
+          <div className="rl-sk-line rl-sk-line--short" />
+          <div className="rl-sk-footer">
+            <div className="rl-sk-avatar" />
+            <div className="rl-sk-info">
+              <div className="rl-sk-line rl-sk-line--name" />
+              <div className="rl-sk-line rl-sk-line--role" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  ),
+});
+
+const ReviewForm = dynamic(() => import("@/components/ReviewForm"), {
+  ssr: false,
+  loading: () => (
+    <div style={{ height: "380px", background: "rgba(255,255,255,0.02)", borderRadius: "20px", marginTop: "3rem" }} />
+  ),
+});
 
 /* ========== CUSTOM CURSOR ========== */
 function CustomCursor() {
@@ -363,9 +381,8 @@ export default function Page() {
   const [active, setActive] = useState("home");
   const [menuOpen, setMenuOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(true);
-  const [reviews, setReviews] = useState<any[]>([]);
-  const [imgPreview, setImgPreview] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const [reviews, setReviews] = useState<ReviewData[]>(INITIAL_TESTIMONIALS);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
   const reduce = useReducedMotion();
 
   const { scrollYProgress } = useScroll();
@@ -374,79 +391,23 @@ export default function Page() {
   /* hero parallax */
   const heroY = useTransform(scrollYProgress, [0, 0.3], reduce ? [0, 0] : [0, -60]);
 
-  useEffect(() => {
-    setMounted(true);
-    fetchReviews();
-  }, []);
-
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
     try {
       const res = await fetch("/api/reviews");
       if (res.ok) {
-        const data = await res.json();
+        const data: ReviewData[] = await res.json();
         setReviews(data.length > 0 ? data : INITIAL_TESTIMONIALS);
-      } else {
-        setReviews(INITIAL_TESTIMONIALS);
       }
-    } catch (error) {
-      console.error("Failed to fetch reviews:", error);
-      setReviews(INITIAL_TESTIMONIALS);
+    } catch {
+      // Keep default testimonials on error
+    } finally {
+      setReviewsLoading(false);
     }
-  };
+  }, []);
 
-  const handleImgChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setImgPreview(reader.result as string);
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleAddReview = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const f = e.currentTarget;
-    const name = (f.elements.namedItem("name") as HTMLInputElement).value;
-    const role = (f.elements.namedItem("role") as HTMLInputElement).value;
-    const org = (f.elements.namedItem("org") as HTMLInputElement).value;
-    const content = (f.elements.namedItem("content") as HTMLTextAreaElement).value;
-    const linkedin = (f.elements.namedItem("linkedin") as HTMLInputElement).value;
-    const email = (f.elements.namedItem("email") as HTMLInputElement).value;
-
-    const newReview = {
-      name,
-      role,
-      org,
-      content,
-      linkedin,
-      email,
-      image: imgPreview,
-      avatar: name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
-    };
-
-    try {
-      const res = await fetch("/api/reviews", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newReview),
-      });
-
-      if (res.ok) {
-        fetchReviews();
-        f.reset();
-        setImgPreview(null);
-        alert("Thank you! Your review has been submitted successfully.");
-      } else {
-        const errorData = await res.json();
-        const errorMsg = errorData.error || "Submission failed. Please try again.";
-        alert(`Submission failed: ${errorMsg}`);
-        console.error("Submission failed:", errorMsg);
-      }
-    } catch (error: any) {
-      console.error("Submission failed:", error);
-      alert(`Submission failed: ${error.message || "An unexpected error occurred."}`);
-    }
-  };
+  useEffect(() => {
+    fetchReviews();
+  }, [fetchReviews]);
 
   useEffect(() => {
     const check = () => setIsDesktop(window.innerWidth > 860);
@@ -937,79 +898,18 @@ export default function Page() {
         </section>
 
         {/* ========= REVIEWS ========= */}
-        <section id="reviews" className="section" >
+        <section id="reviews" className="section">
           <motion.div className="container" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.08 }}>
             <motion.p variants={fadeUp} className="eyebrow">05 — Reviews</motion.p>
             <motion.h2 variants={fadeUp} className="sec-h2">What People Say</motion.h2>
             <motion.p variants={fadeUp} className="sec-sub">Feedback from colleagues and mentors I&apos;ve worked with. Feel free to add yours!</motion.p>
 
-            <div className="reviews-grid">
-              {mounted && reviews.map((t, i) => (
-                <TiltCard key={`${t.name}-${i}`} className="review-card-wrap">
-                  <motion.div
-                    className="review-card"
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.1, duration: 0.6 }}
-                    viewport={{ once: true }}
-                  >
-                    <div className="rev-quote">“</div>
-                    <p className="rev-content">{t.content}</p>
-                    <div className="rev-footer">
-                      {t.image ? (
-                        <img src={t.image} alt={t.name} className="rev-img" />
-                      ) : (
-                        <div className="rev-avatar">{t.avatar}</div>
-                      )}
-                      <div className="rev-info">
-                        <h4 className="rev-name">{t.name}</h4>
-                        <span className="rev-role">{t.role} {t.org ? `· ${t.org}` : ""}</span>
-                      </div>
-                      <div className="rev-links">
-                        {t.linkedin && <a href={t.linkedin} target="_blank" rel="noopener noreferrer" title="LinkedIn" className="rev-link-icon"><Linkedin size={14} /></a>}
-                        {t.email && <a href={`mailto:${t.email}`} title="Email" className="rev-link-icon"><Mail size={14} /></a>}
-                      </div>
-                    </div>
-                  </motion.div>
-                </TiltCard>
-              ))}
-            </div>
+            {/* Review list — dynamically imported, memoized, with skeleton loaders */}
+            <ReviewList reviews={reviews} isLoading={reviewsLoading} />
 
-            {/* Add Review Form */}
-            <motion.div variants={fadeUp} className="add-review-section">
-              <h3 className="add-review-title">Add Your Review</h3>
-              <form className="add-review-form" onSubmit={handleAddReview}>
-                <div className="ar-main-row">
-                  <div className="ar-image-upload">
-                    <label className="ar-img-label">
-                      {imgPreview ? (
-                        <img src={imgPreview || undefined} alt="Preview" className="ar-img-preview" />
-                      ) : (
-                        <div className="ar-img-placeholder">
-                          <Upload size={20} />
-                          <span>Photo</span>
-                        </div>
-                      )}
-                      <input type="file" accept="image/*" onChange={handleImgChange} hidden />
-                    </label>
-                  </div>
-                  <div className="ar-inputs">
-                    <div className="ar-row">
-                      <div className="ar-field"><label>Name *</label><input name="name" type="text" placeholder="Your Name" required /></div>
-                      <div className="ar-field"><label>LinkedIn Profile *</label><input name="linkedin" type="url" placeholder="https://linkedin.com/in/yourprofile" required /></div>
-                    </div>
-                    <div className="ar-row">
-                      <div className="ar-field"><label>Role</label><input name="role" type="text" placeholder="e.g. Project Manager" /></div>
-                      <div className="ar-field"><label>Organization</label><input name="org" type="text" placeholder="e.g. Tech Corp" /></div>
-                    </div>
-                  </div>
-                </div>
-                <div className="ar-field"><label>Email (Optional)</label><input name="email" type="email" placeholder="your@email.com" /></div>
-                <div className="ar-field"><label>Review Content *</label><textarea name="content" rows={4} placeholder="What was it like working with me?" required /></div>
-                <MagneticBtn type="submit" className="btn-primary">
-                  <Sparkles size={16} /> Submit My Review
-                </MagneticBtn>
-              </form>
+            {/* Review form — dynamically imported, memoized, handles its own state */}
+            <motion.div variants={fadeUp}>
+              <ReviewForm />
             </motion.div>
           </motion.div>
         </section>
