@@ -125,12 +125,14 @@ function CustomCursor() {
     <AnimatePresence>
       {!clicked && (
         <motion.div
+          key="cursor-dot"
           className="cursor-dot"
           style={{ x: springX, y: springY, translateX: "-50%", translateY: "-50%" }}
           animate={{ scale: hovered ? 1.5 : 1 }}
         />
       )}
       <motion.div
+        key="cursor-ring"
         className="cursor-ring"
         style={{ x: slowX, y: slowY, translateX: "-50%", translateY: "-50%" }}
         animate={{
