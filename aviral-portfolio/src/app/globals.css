@@ -63,6 +63,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   cursor: none;
+  /* Use hardware acceleration for the whole body to prevent paint lag */
+  transform: translateZ(0); 
 }
 
 @media (max-width: 860px) {
@@ -116,6 +118,8 @@ button {
   border-radius: 50%;
   border: 1.5px solid rgba(6, 182, 212, 0.6);
   box-shadow: 0 0 16px rgba(6, 182, 212, 0.15);
+  /* GPU acceleration for cursor ring */
+  will-change: transform;
 }
 
 /* =================== LAYOUT =================== */
@@ -134,6 +138,9 @@ button {
   padding-block: var(--sp7);
   position: relative;
   z-index: 1;
+  /* Performance optimization for long pages */
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 1000px;
 }
 
 .sec-alt {
@@ -155,6 +162,9 @@ button {
   filter: blur(120px);
   mix-blend-mode: screen;
   opacity: 0.18;
+  /* GPU acceleration for background blobs */
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 .a1 {

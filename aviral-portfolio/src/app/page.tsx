@@ -388,8 +388,8 @@ export default function Page() {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
 
-  /* hero parallax */
-  const heroY = useTransform(scrollYProgress, [0, 0.3], reduce ? [0, 0] : [0, -60]);
+  /* hero parallax — disabled to prevent scroll jank */
+  const heroY = useTransform(scrollYProgress, [0, 0.3], [0, 0]);
 
   const fetchReviews = useCallback(async () => {
     try {
@@ -450,20 +450,21 @@ export default function Page() {
         <motion.div className="scroll-bar" style={{ scaleX }} />
         <AuroraBg />
 
-        {/* Particles */}
+        {/* Particles — lightweight config to avoid scroll jank */}
         {particles && (
-          <motion.div className="ptcl" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2.5 }}>
+          <motion.div className="ptcl" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 3 }}>
             <Particles
               options={{
                 particles: {
-                  number: { value: isDesktop ? 20 : 10 },
-                  links: { enable: isDesktop, opacity: 0.04, color: "#06b6d4" },
-                  move: { speed: 0.15 },
-                  opacity: { value: 0.15 },
-                  size: { value: { min: 1, max: 1.5 } },
+                  number: { value: isDesktop ? 12 : 5 },
+                  links: { enable: false },
+                  move: { speed: 0.08, outModes: "bounce" },
+                  opacity: { value: 0.1 },
+                  size: { value: { min: 0.5, max: 1.2 } },
                   color: { value: "#06b6d4" }
                 },
-                fpsLimit: 30
+                fpsLimit: 24,
+                detectRetina: false,
               }}
             />
           </motion.div>
@@ -909,7 +910,7 @@ export default function Page() {
 
             {/* Review form — dynamically imported, memoized, handles its own state */}
             <motion.div variants={fadeUp}>
-              <ReviewForm />
+              <ReviewForm onSubmitted={fetchReviews} />
             </motion.div>
           </motion.div>
         </section>
