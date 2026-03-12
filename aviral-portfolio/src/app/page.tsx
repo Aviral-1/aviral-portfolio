@@ -122,15 +122,14 @@ function CustomCursor() {
   }, [cursorX, cursorY]);
 
   return (
-    <>
-      {/* Dot */}
-      <motion.div
-        className="cursor-dot"
-        style={{ x: springX, y: springY, translateX: "-50%", translateY: "-50%" }}
-        animate={{ scale: clicked ? 0.5 : 1 }}
-        transition={{ duration: 0.1 }}
-      />
-      {/* Ring */}
+    <AnimatePresence>
+      {!clicked && (
+        <motion.div
+          className="cursor-dot"
+          style={{ x: springX, y: springY, translateX: "-50%", translateY: "-50%" }}
+          animate={{ scale: hovered ? 1.5 : 1 }}
+        />
+      )}
       <motion.div
         className="cursor-ring"
         style={{ x: slowX, y: slowY, translateX: "-50%", translateY: "-50%" }}
@@ -138,9 +137,9 @@ function CustomCursor() {
           scale: hovered ? 1.8 : clicked ? 0.8 : 1,
           opacity: hovered ? 0.6 : 0.35,
         }}
-        transition={{ duration: 0.25 }}
+        transition={{ duration: 0.2, ease: "linear" }}
       />
-    </>
+    </AnimatePresence>
   );
 }
 
@@ -219,6 +218,7 @@ const scaleIn: Variants = { hidden: { opacity: 0, scale: 0.88 }, show: { opacity
 
 /* ========== TILT CARD COMPONENT ========== */
 function TiltCard({ children, className }: { children: React.ReactNode, className?: string }) {
+  const reduce = useReducedMotion();
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const lastUpdate = useRef(0);
@@ -246,6 +246,8 @@ function TiltCard({ children, className }: { children: React.ReactNode, classNam
     x.set(0);
     y.set(0);
   };
+
+  if (reduce) return <div className={className}>{children}</div>;
 
   return (
     <motion.div
@@ -420,7 +422,7 @@ export default function Page() {
     let lastScrollPos = 0;
     const onScroll = () => {
       const now = Date.now();
-      if (now - lastScrollPos < 50) return; // Throttle scroll calculations
+      if (now - lastScrollPos < 80) return; // Increased throttle for scroll
       lastScrollPos = now;
 
       const pos = window.scrollY + 140;
@@ -435,8 +437,11 @@ export default function Page() {
   }, []);
 
   useEffect(() => {
-    initParticlesEngine(async e => loadSlim(e)).then(() => setParticles(true));
-  }, []);
+    // Only load particles if desktop and not on reduced motion
+    if (isDesktop && !reduce) {
+      initParticlesEngine(async e => loadSlim(e)).then(() => setParticles(true));
+    }
+  }, [isDesktop, reduce]);
 
   const goto = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -451,19 +456,19 @@ export default function Page() {
         <AuroraBg />
 
         {/* Particles — lightweight config to avoid scroll jank */}
-        {particles && (
-          <motion.div className="ptcl" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 3 }}>
+        {particles && isDesktop && (
+          <motion.div className="ptcl" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2 }}>
             <Particles
               options={{
                 particles: {
-                  number: { value: isDesktop ? 12 : 5 },
+                  number: { value: 12 },
                   links: { enable: false },
                   move: { speed: 0.08, outModes: "bounce" },
                   opacity: { value: 0.1 },
                   size: { value: { min: 0.5, max: 1.2 } },
                   color: { value: "#06b6d4" }
                 },
-                fpsLimit: 24,
+                fpsLimit: 30, // Locked to 30 for stability
                 detectRetina: false,
               }}
             />

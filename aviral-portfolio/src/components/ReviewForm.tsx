@@ -35,7 +35,10 @@ const FloatField = memo(function FloatField({
   error?: string; maxLength?: number; required?: boolean; placeholder?: string;
 }) {
   const [focused, setFocused] = useState(false);
+  // Separate 'active' state to avoid reading 'value' on every render if possible, 
+  // but since FloatField is controlled, it's already re-rendering when value changes.
   const active = focused || value.length > 0;
+
   return (
     <div className={`ff-wrap ${error ? "ff-wrap--err" : ""}`}>
       <input
@@ -49,13 +52,11 @@ const FloatField = memo(function FloatField({
         {label}{required && <span className="ff-req"> *</span>}
       </label>
       <div className={`ff-bar ${focused ? "ff-bar--active" : ""} ${error ? "ff-bar--err" : ""}`} />
-      <AnimatePresence>
-        {error && (
-          <motion.span className="ff-err" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-            {error}
-          </motion.span>
-        )}
-      </AnimatePresence>
+      {error && (
+        <span className="ff-err" style={{ display: 'block', opacity: 1, transform: 'none' }}>
+          {error}
+        </span>
+      )}
     </div>
   );
 });
@@ -68,7 +69,11 @@ function ReviewForm({ onSubmitted }: ReviewFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
   const [submitMsg, setSubmitMsg] = useState("");
-  const [msgLen, setMsgLen] = useState(0);
+  
+  // msgLen is derived from form.message, keeping it as a separate state can cause double renders
+  // We'll calculate it on demand or use a lighter way to show the counter.
+  const msgLen = form.message.length;
+
   const [textFocused, setTextFocused] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -83,9 +88,16 @@ function ReviewForm({ onSubmitted }: ReviewFormProps) {
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       const { name, value } = e.target;
-      setForm((p) => ({ ...p, [name]: value }));
-      setErrors((p) => ({ ...p, [name]: undefined }));
-      if (name === "message") setMsgLen(value.length);
+      // Use functional update to ensure we have latest state and avoid closure issues
+      setForm((p) => {
+        if (p[name as keyof FormState] === value) return p;
+        return { ...p, [name]: value };
+      });
+      // Only clear error if it exists
+      setErrors((p) => {
+        if (p[name as keyof FieldError] === undefined) return p;
+        return { ...p, [name]: undefined };
+      });
     }, []
   );
 
@@ -140,7 +152,6 @@ function ReviewForm({ onSubmitted }: ReviewFormProps) {
         setSubmitStatus("success");
         setSubmitMsg("Your review is live! Thank you 🎉");
         setForm(INITIAL_FORM);
-        setMsgLen(0);
         setImgPreview(null);
         if (fileRef.current) fileRef.current.value = "";
         // ← KEY FIX: notify parent to re-fetch reviews instantly
@@ -250,20 +261,18 @@ function ReviewForm({ onSubmitted }: ReviewFormProps) {
             placeholder={textFocused ? "What was it like working with me? Share your honest experience…" : ""}
           />
           <div className="rf-msg-footer">
-            <AnimatePresence>
-              {errors.message && (
-                <motion.span className="ff-err" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                  {errors.message}
-                </motion.span>
-              )}
-            </AnimatePresence>
-            {/* Circular char counter */}
+            {errors.message && (
+              <span className="ff-err" style={{ opacity: 1, transform: 'none' }}>
+                {errors.message}
+              </span>
+            )}
+            {/* Circular char counter - simplified animation */}
             <div className="rf-counter" title={`${msgLen}/1000 characters`}>
               <svg width="26" height="26" viewBox="0 0 26 26" style={{ transform: "rotate(-90deg)" }}>
                 <circle cx="13" cy="13" r="10" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="2.5" />
                 <circle cx="13" cy="13" r="10" fill="none" stroke={counterColor}
                   strokeWidth="2.5" strokeDasharray={circumference} strokeDashoffset={dash}
-                  strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.2s, stroke 0.3s" }} />
+                  strokeLinecap="round" style={{ transition: "stroke-dashoffset 0.1s linear" }} />
               </svg>
               {msgLen > 800 && <span className="rf-counter-num" style={{ color: counterColor }}>{1000 - msgLen}</span>}
             </div>
