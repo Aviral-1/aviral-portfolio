@@ -17,6 +17,41 @@ interface FieldError {
   linkedinProfile?: string;
   email?: string;
 }
+
+/** Utility to compress image before base64 conversion */
+const compressImage = (file: File, maxDim = 800, quality = 0.7): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (e) => {
+      const img = new Image();
+      img.src = e.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let { width, height } = img;
+        if (width > height) {
+          if (width > maxDim) {
+            height *= maxDim / width;
+            width = maxDim;
+          }
+        } else {
+          if (height > maxDim) {
+            width *= maxDim / height;
+            height = maxDim;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = reject;
+    };
+    reader.onerror = reject;
+  });
+};
+
 interface ReviewFormProps {
   /** Called after a successful submission so the parent can refresh the list instantly */
   onSubmitted?: () => void;
@@ -101,17 +136,29 @@ function ReviewForm({ onSubmitted }: ReviewFormProps) {
     }, []
   );
 
-  const handleImgChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImgChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
+    if (file.size > 5 * 1024 * 1024) {
       setSubmitStatus("error");
-      setSubmitMsg("Image must be under 2 MB.");
+      setSubmitMsg("Image must be under 5 MB.");
       return;
     }
-    const reader = new FileReader();
-    reader.onloadend = () => setImgPreview(reader.result as string);
-    reader.readAsDataURL(file);
+    try {
+      const compressed = await compressImage(file);
+      setImgPreview(compressed);
+    } catch (err) {
+      console.error("Compression failed:", err);
+      // Fallback to original if compression fails and it's not too huge
+      if (file.size < 1 * 1024 * 1024) {
+        const reader = new FileReader();
+        reader.onloadend = () => setImgPreview(reader.result as string);
+        reader.readAsDataURL(file);
+      } else {
+        setSubmitStatus("error");
+        setSubmitMsg("Failed to process image.");
+      }
+    }
   }, []);
 
   const validate = useCallback((): boolean => {

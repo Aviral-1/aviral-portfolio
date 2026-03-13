@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 
-const DATA_PATH = path.join(process.cwd(), 'src/data/reviews.json');
+// Moved out of src/ to prevent Next.js dev server from reloading on every write
+const DATA_PATH = path.join(process.cwd(), 'data/reviews.json');
 
 export interface Review {
   _id?: string;
@@ -22,7 +23,7 @@ export const jsonDB = {
       if (!fs.existsSync(DATA_PATH)) {
         return [];
       }
-      const data = fs.readFileSync(DATA_PATH, 'utf8');
+      const data = await fs.promises.readFile(DATA_PATH, 'utf8');
       return JSON.parse(data);
     } catch (error) {
       console.error('Error reading JSON DB:', error);
@@ -31,6 +32,7 @@ export const jsonDB = {
   },
 
   async addReview(review: Review): Promise<Review> {
+    const TEMP_PATH = `${DATA_PATH}.tmp`;
     try {
       const reviews = await this.getReviews();
       const newReview = {
@@ -39,10 +41,18 @@ export const jsonDB = {
         createdAt: new Date().toISOString(),
       };
       reviews.unshift(newReview);
-      fs.writeFileSync(DATA_PATH, JSON.stringify(reviews, null, 2));
+      
+      // Atomic write: write to temp file then rename
+      await fs.promises.writeFile(TEMP_PATH, JSON.stringify(reviews, null, 2), 'utf8');
+      await fs.promises.rename(TEMP_PATH, DATA_PATH);
+      
       return newReview;
     } catch (error) {
       console.error('Error writing to JSON DB:', error);
+      // Clean up temp file if it exists
+      if (fs.existsSync(TEMP_PATH)) {
+        try { await fs.promises.unlink(TEMP_PATH); } catch (e) {}
+      }
       throw error;
     }
   }
