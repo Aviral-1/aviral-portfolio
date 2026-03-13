@@ -1,14 +1,12 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
 // Extend NodeJS global type so TypeScript doesn't complain
 declare global {
   // eslint-disable-next-line no-var
   var _mongoose: {
     conn: typeof mongoose | null;
     promise: Promise<typeof mongoose> | null;
-  };
+  } | undefined;
 }
 
 /**
@@ -22,10 +20,7 @@ if (!cached) {
 }
 
 async function connectDB(): Promise<typeof mongoose> {
-  // Return existing connection immediately (no new connection = no RAM spike)
-  if (cached.conn) {
-    return cached.conn;
-  }
+  const MONGODB_URI = process.env.MONGODB_URI?.trim();
 
   if (!MONGODB_URI) {
     throw new Error(
@@ -33,29 +28,39 @@ async function connectDB(): Promise<typeof mongoose> {
     );
   }
 
-  if (!cached.promise) {
+  // Return existing connection immediately
+  if (cached!.conn) {
+    return cached!.conn;
+  }
+
+  if (!cached!.promise) {
     const opts: mongoose.ConnectOptions = {
       bufferCommands: false,    // Don't buffer ops when disconnected
       maxPoolSize: 5,           // Limit connection pool to prevent RAM spikes
       serverSelectionTimeoutMS: 5000, // Fail fast if DB unreachable
-      socketTimeoutMS: 45000,
     };
 
-    cached.promise = mongoose
+    cached!.promise = mongoose
       .connect(MONGODB_URI, opts)
       .then((mg) => {
         console.log("[MongoDB] Connected successfully");
         return mg;
       })
       .catch((err) => {
-        cached.promise = null; // Reset promise so retries work
+        cached!.promise = null; // Reset promise so retries work
         console.error("[MongoDB] Connection failed:", err.message);
         throw err;
       });
   }
 
-  cached.conn = await cached.promise;
-  return cached.conn;
+  try {
+    cached!.conn = await cached!.promise;
+  } catch (e) {
+    cached!.promise = null;
+    throw e;
+  }
+
+  return cached!.conn;
 }
 
 export default connectDB;

@@ -33,7 +33,7 @@ function isRateLimited(ip: string): boolean {
 }
 
 // Simplified check: if it exists, use it. If it fails, the catch block will explain why.
-const isMongoDB = !!process.env.MONGODB_URI;
+const isMongoDB = !!process.env.MONGODB_URI?.trim();
 
 /* ─────────────────────────── GET ─────────────────────────── */
 
