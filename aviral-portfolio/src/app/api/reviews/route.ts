@@ -105,11 +105,27 @@ export async function POST(req: NextRequest) {
     const reviewData = { name, message, profileImage, linkedinProfile, email, jobTitle };
 
     if (isMongoDB) {
-      await connectDB();
-      const review = await Review.create(reviewData);
-      return NextResponse.json(review.toObject(), { status: 201 });
+      try {
+        await connectDB();
+        const review = await Review.create(reviewData);
+        return NextResponse.json(review.toObject(), { status: 201 });
+      } catch (dbError) {
+        console.error("[POST /api/reviews] MongoDB Error:", dbError);
+        return NextResponse.json(
+          { error: "Database connection failed. Please check MONGODB_URI configuration." },
+          { status: 503 }
+        );
+      }
     } else {
       // Fall back to JSON file storage
+      // WARNING: This will fail in production (Vercel) as the filesystem is read-only
+      if (process.env.NODE_ENV === "production") {
+        return NextResponse.json(
+          { error: "Reviews cannot be saved. MONGODB_URI is not configured in project settings." },
+          { status: 501 }
+        );
+      }
+      
       const review = await jsonDB.addReview({
         name,
         content: message,
