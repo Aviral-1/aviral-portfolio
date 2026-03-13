@@ -32,8 +32,8 @@ function isRateLimited(ip: string): boolean {
   return false;
 }
 
-const isMongoDB = !!process.env.MONGODB_URI &&
-  !process.env.MONGODB_URI.includes("<username>");
+// Simplified check: if it exists, use it. If it fails, the catch block will explain why.
+const isMongoDB = !!process.env.MONGODB_URI;
 
 /* ─────────────────────────── GET ─────────────────────────── */
 
@@ -109,32 +109,44 @@ export async function POST(req: NextRequest) {
         await connectDB();
         const review = await Review.create(reviewData);
         return NextResponse.json(review.toObject(), { status: 201 });
-      } catch (dbError) {
-        console.error("[POST /api/reviews] MongoDB Error:", dbError);
+      } catch (dbError: any) {
+        console.error("[POST /api/reviews] MongoDB Error:", dbError.message);
         return NextResponse.json(
-          { error: "Database connection failed. Please check MONGODB_URI configuration." },
+          { 
+            error: "Database connection failed.",
+            details: "Please ensure MONGODB_URI is correctly set in your project settings and doesn't contain placeholders like <username>."
+          },
           { status: 503 }
         );
       }
     } else {
-      // Fall back to JSON file storage
-      // WARNING: This will fail in production (Vercel) as the filesystem is read-only
-      if (process.env.NODE_ENV === "production") {
-        return NextResponse.json(
-          { error: "Reviews cannot be saved. MONGODB_URI is not configured in project settings." },
-          { status: 501 }
-        );
+      try {
+        // Fall back to JSON file storage (works locally, fails on Vercel)
+        const review = await jsonDB.addReview({
+          name,
+          content: message,
+          image: profileImage,
+          linkedin: linkedinProfile,
+          email,
+          role: jobTitle,
+        });
+        return NextResponse.json(review, { status: 201 });
+      } catch (jsonError: any) {
+        console.error("[POST /api/reviews] Storage Error:", jsonError.message);
+        
+        // Specific message for Vercel's read-only filesystem
+        if (jsonError.code === 'EROFS' || process.env.NODE_ENV === "production") {
+          return NextResponse.json(
+            { 
+              error: "Configuration Required", 
+              details: "Review submissions require a database in production. Post-deployment storage to files is not supported. Please set the MONGODB_URI environment variable." 
+            },
+            { status: 501 }
+          );
+        }
+        
+        throw jsonError; // Re-throw to be caught by the outer catch
       }
-      
-      const review = await jsonDB.addReview({
-        name,
-        content: message,
-        image: profileImage,
-        linkedin: linkedinProfile,
-        email,
-        role: jobTitle,
-      });
-      return NextResponse.json(review, { status: 201 });
     }
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Unknown error";

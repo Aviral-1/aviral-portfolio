@@ -205,7 +205,8 @@ function ReviewForm({ onSubmitted }: ReviewFormProps) {
         onSubmitted?.();
       } else {
         setSubmitStatus("error");
-        setSubmitMsg(data.error ?? "Submission failed. Please try again.");
+        const fullMsg = data.details ? `${data.error}: ${data.details}` : (data.error ?? "Submission failed. Please try again.");
+        setSubmitMsg(fullMsg);
       }
     } catch {
       setSubmitStatus("error");
