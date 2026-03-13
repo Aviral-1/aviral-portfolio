@@ -165,6 +165,15 @@ button {
   /* GPU acceleration for background blobs */
   will-change: transform;
   backface-visibility: hidden;
+  /* Optimization: Reduce blur on mobile */
+  transform: translateZ(0); 
+}
+
+@media (max-width: 768px) {
+  .aurora-blob {
+    filter: blur(60px); /* Half blur on mobile for GPU relief */
+    opacity: 0.12;
+  }
 }
 
 .a1 {
@@ -269,6 +278,15 @@ button {
     linear-gradient(90deg, rgba(255, 255, 255, 0.018) 1px, transparent 1px);
   background-size: 60px 60px;
   mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+}
+
+@media (max-width: 768px) {
+  .grid-overlay {
+    mask-image: none; /* Masks are heavy on mobile GPUs */
+    -webkit-mask-image: none;
+    opacity: 0.05;
+  }
 }
 
 /* =================== PARTICLES =================== */

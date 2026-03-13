@@ -79,6 +79,7 @@ const ReviewForm = dynamic(() => import("@/components/ReviewForm"), {
 
 /* ========== CUSTOM CURSOR ========== */
 function CustomCursor() {
+  const [isTouch, setIsTouch] = useState(false);
   const cursorX = useMotionValue(-100);
   const cursorY = useMotionValue(-100);
   const springX = useSpring(cursorX, { stiffness: 500, damping: 35 });
@@ -89,15 +90,27 @@ function CustomCursor() {
   const [clicked, setClicked] = useState(false);
 
   useEffect(() => {
-    const move = (e: MouseEvent) => { cursorX.set(e.clientX); cursorY.set(e.clientY); };
+    // Detect touch device to disable custom cursor
+    const touchCheck = window.matchMedia("(pointer: coarse)").matches;
+    setIsTouch(touchCheck);
+    if (touchCheck) return;
+
+    let lastMoveUpdate = 0;
+    const move = (e: MouseEvent) => {
+      const now = Date.now();
+      if (now - lastMoveUpdate < 16) return; // ~60fps throttle
+      lastMoveUpdate = now;
+      cursorX.set(e.clientX);
+      cursorY.set(e.clientY);
+    };
+
     const down = () => setClicked(true);
     const up = () => setClicked(false);
 
-    // Throttled event delegation for hover detection
     let lastHoverUpdate = 0;
     const handleOver = (e: MouseEvent) => {
       const now = Date.now();
-      if (now - lastHoverUpdate < 64) return; 
+      if (now - lastHoverUpdate < 100) return; // 100ms throttle for hover detection
       lastHoverUpdate = now;
 
       const target = e.target as HTMLElement;
@@ -108,10 +121,10 @@ function CustomCursor() {
       }
     };
 
-    window.addEventListener("mousemove", move);
-    window.addEventListener("mousedown", down);
-    window.addEventListener("mouseup", up);
-    window.addEventListener("mouseover", handleOver);
+    window.addEventListener("mousemove", move, { passive: true });
+    window.addEventListener("mousedown", down, { passive: true });
+    window.addEventListener("mouseup", up, { passive: true });
+    window.addEventListener("mouseover", handleOver, { passive: true });
 
     return () => {
       window.removeEventListener("mousemove", move);
@@ -120,6 +133,8 @@ function CustomCursor() {
       window.removeEventListener("mouseover", handleOver);
     };
   }, [cursorX, cursorY]);
+
+  if (isTouch) return null;
 
   return (
     <AnimatePresence>
@@ -230,7 +245,7 @@ function TiltCard({ children, className }: { children: React.ReactNode, classNam
 
   const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
     const now = Date.now();
-    if (now - lastUpdate.current < 32) return; // ~30fps throttle for tilt
+    if (now - lastUpdate.current < 48) return; // ~20fps throttle for tilt to save CPU
     lastUpdate.current = now;
 
     const rect = event.currentTarget.getBoundingClientRect();
@@ -238,8 +253,8 @@ function TiltCard({ children, className }: { children: React.ReactNode, classNam
     const height = rect.height;
     const mouseX = event.clientX - rect.left;
     const mouseY = event.clientY - rect.top;
-    const xPct = (mouseX / width - 0.5) * 200;
-    const yPct = (mouseY / height - 0.5) * 200;
+    const xPct = (mouseX / width - 0.5) * 160; // Reduced intensity
+    const yPct = (mouseY / height - 0.5) * 160;
     x.set(xPct);
     y.set(yPct);
   };
@@ -421,26 +436,37 @@ export default function Page() {
   }, []);
 
   useEffect(() => {
-    let lastScrollPos = 0;
-    const onScroll = () => {
-      const now = Date.now();
-      if (now - lastScrollPos < 80) return; // Increased throttle for scroll
-      lastScrollPos = now;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActive(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: "-30% 0px -60% 0px", threshold: 0 }
+    );
 
-      const pos = window.scrollY + 140;
-      navItems.forEach(id => {
-        const el = document.getElementById(id);
-        if (el && pos >= el.offsetTop && pos < el.offsetTop + el.offsetHeight) setActive(id);
-      });
+    navItems.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    const onScroll = () => {
       setShowTop(window.scrollY > 500);
     };
+    
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", onScroll);
+    };
   }, []);
 
   useEffect(() => {
-    // Only load particles if desktop and not on reduced motion
-    if (isDesktop && !reduce) {
+    // Only load particles if desktop, not on reduced motion, and NOT a touch device
+    const isTouch = window.matchMedia("(pointer: coarse)").matches;
+    if (isDesktop && !reduce && !isTouch) {
       initParticlesEngine(async e => loadSlim(e)).then(() => setParticles(true));
     }
   }, [isDesktop, reduce]);
