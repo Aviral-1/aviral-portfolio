@@ -136,10 +136,13 @@ export async function POST(req: NextRequest) {
         
         // Specific message for Vercel's read-only filesystem
         if (jsonError.code === 'EROFS' || process.env.NODE_ENV === "production") {
+          const rawUri = process.env.MONGODB_URI || "";
+          const maskedUri = rawUri ? `${rawUri.substring(0, 10)}... (Length: ${rawUri.length})` : "NOT FOUND";
+          
           return NextResponse.json(
             { 
               error: "Configuration Required", 
-              details: "Review submissions require a database in production. Post-deployment storage to files is not supported. Please set the MONGODB_URI environment variable." 
+              details: `Review submissions require a database in production. MONGODB_URI is: ${maskedUri}. Please ensure it is set correctly in Vercel settings.` 
             },
             { status: 501 }
           );
