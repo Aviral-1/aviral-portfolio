@@ -1,21 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import connectDB from "@/lib/mongodb";
-import Review from "@/models/Review";
 import { jsonDB } from "@/lib/jsonDB";
+import { Resend } from "resend";
+
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 /* ─────────────────────────── helpers ─────────────────────────── */
 
-/** Strip HTML tags to prevent stored XSS */
 function sanitize(str: unknown): string {
   if (typeof str !== "string") return "";
   return str
-    .replace(/<[^>]*>/g, "") // remove HTML tags
+    .replace(/<[^>]*>/g, "")
     .replace(/&/g, "&amp;")
     .replace(/"/g, "&quot;")
     .trim();
 }
 
-/** In-memory rate limiter — 1 submission per IP per 60 seconds */
 const rateLimitMap = new Map<string, number>();
 const RATE_LIMIT_MS = 60_000;
 
@@ -24,7 +23,6 @@ function isRateLimited(ip: string): boolean {
   const now = Date.now();
   if (last && now - last < RATE_LIMIT_MS) return true;
   rateLimitMap.set(ip, now);
-  // Prevent memory leak: cap at 1000 entries
   if (rateLimitMap.size > 1000) {
     const oldestKey = rateLimitMap.keys().next().value;
     if (oldestKey) rateLimitMap.delete(oldestKey);
@@ -32,25 +30,13 @@ function isRateLimited(ip: string): boolean {
   return false;
 }
 
-// Simplified check: if it exists, use it. If it fails, the catch block will explain why.
-const isMongoDB = !!process.env.MONGODB_URI?.trim();
-
 /* ─────────────────────────── GET ─────────────────────────── */
 
 export async function GET() {
   try {
-    if (isMongoDB) {
-      await connectDB();
-      const reviews = await Review.find()
-        .sort({ createdAt: -1 })
-        .limit(10)
-        .lean(); // Returns plain JS objects — ~60% less memory than Mongoose docs
-      return NextResponse.json(reviews, { status: 200 });
-    } else {
-      // Fall back to JSON file storage
-      const reviews = await jsonDB.getReviews();
-      return NextResponse.json(reviews.slice(0, 10), { status: 200 });
-    }
+    // Always serve from the static deployed file
+    const reviews = await jsonDB.getReviews();
+    return NextResponse.json(reviews.slice(0, 10), { status: 200 });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Unknown error";
     console.error("[GET /api/reviews] Error:", msg);
@@ -62,12 +48,11 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    // Rate limiting by IP
     const forwarded = req.headers.get("x-forwarded-for");
     const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
     if (isRateLimited(ip)) {
       return NextResponse.json(
-        { error: "Too many submissions. Please wait 60 seconds before trying again." },
+        { error: "Too many submissions. Please wait 60 seconds." },
         { status: 429 }
       );
     }
@@ -79,7 +64,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    // Sanitize all string inputs
     const name = sanitize(body.name);
     const message = sanitize(body.message);
     const profileImage = typeof body.profileImage === "string" ? body.profileImage : "";
@@ -87,41 +71,80 @@ export async function POST(req: NextRequest) {
     const email = sanitize(body.email);
     const jobTitle = sanitize(body.jobTitle);
 
-    // Server-side validation
     const errors: string[] = [];
     if (!name || name.length < 2) errors.push("Name must be at least 2 characters.");
     if (!message || message.length < 20) errors.push("Review must be at least 20 characters.");
     if (message && message.length > 1000) errors.push("Review cannot exceed 1000 characters.");
-    if (linkedinProfile && !/^(https?:\/\/)?(www\.)?linkedin\.com\/.+/.test(linkedinProfile)) {
-      errors.push("LinkedIn URL is not valid.");
-    }
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors.push("Email address is not valid.");
-    }
     if (errors.length > 0) {
       return NextResponse.json({ error: errors.join(" ") }, { status: 422 });
     }
 
-    const reviewData = { name, message, profileImage, linkedinProfile, email, jobTitle };
+    const reviewData = { name, message, profileImage, linkedinProfile, email, role: jobTitle };
 
-    if (isMongoDB) {
-      try {
-        await connectDB();
-        const review = await Review.create(reviewData);
-        return NextResponse.json(review.toObject(), { status: 201 });
-      } catch (dbError: any) {
-        console.error("[POST /api/reviews] MongoDB Error:", dbError.message);
-        return NextResponse.json(
-          { 
-            error: "Database connection failed.",
-            details: "Please ensure MONGODB_URI is correctly set in your project settings and doesn't contain placeholders like <username>."
-          },
-          { status: 503 }
-        );
+    // Use Email Notification in Production
+    if (process.env.NODE_ENV === "production") {
+      if (!resend) {
+         return NextResponse.json(
+            { 
+              error: "Configuration Required", 
+              details: `Review submissions require an email provider in production. Please set RESEND_API_KEY and ADMIN_EMAIL in Vercel settings.` 
+            },
+            { status: 501 }
+          );
       }
-    } else {
+
+      // Send Email
+      // Resend requires a verified domain to send from, but 'onboarding@resend.dev' works for testing
+      // However, it can only send TO the email address you registered with Resend.
+      const adminEmail = process.env.ADMIN_EMAIL || "delivered@resend.dev"; 
+      
+      const emailHtml = `
+        <h2>New Review Submission!</h2>
+        <p><strong>Name:</strong> ${name}</p>
+        <p><strong>Job Title:</strong> ${jobTitle}</p>
+        <p><strong>LinkedIn:</strong> ${linkedinProfile}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Message:</strong></p>
+        <blockquote>${message}</blockquote>
+        <br/>
+        <p><strong>To add this to your site, copy the JSON below into data/reviews.json:</strong></p>
+        <pre>
+{
+  "name": "${name}",
+  "role": "${jobTitle}",
+  "linkedin": "${linkedinProfile}",
+  "email": "${email}",
+  "content": ${JSON.stringify(message)},
+  "image": "${profileImage}",
+  "_id": "${Date.now().toString()}",
+  "createdAt": "${new Date().toISOString()}"
+},
+        </pre>
+      `;
+
       try {
-        // Fall back to JSON file storage (works locally, fails on Vercel)
+        const { error } = await resend.emails.send({
+          from: 'Portfolio <onboarding@resend.dev>',
+          to: adminEmail,
+          subject: `New Portfolio Review from ${name}`,
+          html: emailHtml,
+        });
+
+        if (error) {
+           console.error("[POST /api/reviews] Resend Error:", error);
+           return NextResponse.json({ error: "Failed to send email notification.", details: error.message }, { status: 500 });
+        }
+
+        // Return a mock review object so the UI considers it a success
+        return NextResponse.json({ ...reviewData, _id: "pending_approval" }, { status: 201 });
+      } catch (e: any) {
+        console.error("[POST /api/reviews] Email Error:", e.message);
+        return NextResponse.json({ error: "Internal error sending email." }, { status: 500 });
+      }
+
+    } else {
+      // Local Fallback (just write to file so dev mode is easy)
+      try {
         const review = await jsonDB.addReview({
           name,
           content: message,
@@ -132,23 +155,7 @@ export async function POST(req: NextRequest) {
         });
         return NextResponse.json(review, { status: 201 });
       } catch (jsonError: any) {
-        console.error("[POST /api/reviews] Storage Error:", jsonError.message);
-        
-        // Specific message for Vercel's read-only filesystem
-        if (jsonError.code === 'EROFS' || process.env.NODE_ENV === "production") {
-          const rawUri = process.env.MONGODB_URI || "";
-          const maskedUri = rawUri ? `${rawUri.substring(0, 10)}... (Length: ${rawUri.length})` : "NOT FOUND";
-          
-          return NextResponse.json(
-            { 
-              error: "Configuration Required", 
-              details: `Review submissions require a database in production. MONGODB_URI is: ${maskedUri}. Please ensure it is set correctly in Vercel settings.` 
-            },
-            { status: 501 }
-          );
-        }
-        
-        throw jsonError; // Re-throw to be caught by the outer catch
+         return NextResponse.json({ error: "Local save failed." }, { status: 500 });
       }
     }
   } catch (error: unknown) {
