@@ -20,6 +20,7 @@ export interface ReviewData {
   image?: string;
   avatar?: string;
   linkedin?: string;
+  createdAt?: string | Date;
 }
 
 interface ReviewListProps {
@@ -134,16 +135,13 @@ const ReviewCard = memo(function ReviewCard({
 
 /* ── Review List ── */
 function ReviewList({ reviews, isLoading = false }: ReviewListProps) {
-  // Memoize sorted reviews — avoids re-sort on every parent render
+  // Sort reviews: DB entries sorted by recency
   const sorted = useMemo(
-    () =>
-      [...reviews].sort((a, b) => {
-        // Keep initial testimonials (no _id) at the front; DB entries sorted by recency
-        if (!a._id && !b._id) return 0;
-        if (!a._id) return -1;
-        if (!b._id) return 1;
-        return 0;
-      }),
+    () => [...reviews].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    }),
     [reviews]
   );
 

@@ -201,12 +201,10 @@ function ReviewForm({ onSubmitted }: ReviewFormProps) {
         setForm(INITIAL_FORM);
         setImgPreview(null);
         if (fileRef.current) fileRef.current.value = "";
-        // ← KEY FIX: notify parent to re-fetch reviews instantly
         onSubmitted?.();
       } else {
         setSubmitStatus("error");
-        const fullMsg = data.details ? `${data.error}: ${data.details}` : (data.error ?? "Submission failed. Please try again.");
-        setSubmitMsg(fullMsg);
+        setSubmitMsg(data.error ?? "Submission failed. Please try again.");
       }
     } catch {
       setSubmitStatus("error");
