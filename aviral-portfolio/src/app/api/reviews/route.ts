@@ -1,8 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import connectDB from "@/lib/mongodb";
-import Review from "@/models/Review";
+﻿import { NextRequest, NextResponse } from "next/server";
+import { jsonDB } from "@/lib/jsonDB";
 
-/* ─────────────────────────── helpers ─────────────────────────── */
+/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ helpers ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
 
 function sanitize(str: unknown): string {
   if (typeof str !== "string") return "";
@@ -13,7 +12,7 @@ function sanitize(str: unknown): string {
     .trim();
 }
 
-/** In-memory rate limiter — 1 submission per IP per 60 seconds */
+/** In-memory rate limiter ΓÇö 1 submission per IP per 60 seconds */
 const rateLimitMap = new Map<string, number>();
 const RATE_LIMIT_MS = 60_000;
 
@@ -29,17 +28,12 @@ function isRateLimited(ip: string): boolean {
   return false;
 }
 
-/* ─────────────────────────── GET ─────────────────────────── */
+/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ GET ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
 
 export async function GET() {
   try {
-    await connectDB();
-    // Use .lean() to bypass document instantiation for ~60% faster retrieval
-    const reviews = await Review.find()
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .lean();
-    return NextResponse.json(reviews, { status: 200 });
+    const reviews = await jsonDB.getReviews();
+    return NextResponse.json(reviews.slice(0, 10), { status: 200 });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Unknown error";
     console.error("[GET /api/reviews] Error:", msg);
@@ -47,16 +41,15 @@ export async function GET() {
   }
 }
 
-/* ─────────────────────────── POST ─────────────────────────── */
+/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ POST ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
 
 export async function POST(req: NextRequest) {
   try {
-    // Rate limiting by IP
     const forwarded = req.headers.get("x-forwarded-for");
     const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
     if (isRateLimited(ip)) {
       return NextResponse.json(
-        { error: "Too many submissions. Please wait 60 seconds before trying again." },
+        { error: "Too many submissions. Please wait 60 seconds." },
         { status: 429 }
       );
     }
@@ -68,7 +61,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    // Sanitize and Validate
     const name = sanitize(body.name);
     const message = sanitize(body.message);
     const profileImage = typeof body.profileImage === "string" ? body.profileImage : "";
@@ -79,26 +71,98 @@ export async function POST(req: NextRequest) {
     const errors: string[] = [];
     if (!name || name.length < 2) errors.push("Name must be at least 2 characters.");
     if (!message || message.length < 20) errors.push("Review must be at least 20 characters.");
-    if (message && message.length > 1000) errors.push("Review cannot exceed 1000 characters.");
-
     if (errors.length > 0) {
       return NextResponse.json({ error: errors.join(" ") }, { status: 422 });
     }
 
-    await connectDB();
-    const review = await Review.create({
+    const reviewData = {
       name,
+      role: jobTitle,
       content: message,
       image: profileImage,
       linkedin: linkedinProfile,
       email,
-      role: jobTitle,
-    });
+      _id: Date.now().toString(),
+      createdAt: new Date().toISOString()
+    };
 
-    return NextResponse.json(review.toObject(), { status: 201 });
+    // --- Git-Based "Save in Code" Logic for Production ---
+    if (process.env.NODE_ENV === "production" || process.env.GITHUB_TOKEN) {
+      const token = process.env.GITHUB_TOKEN;
+      const repo = process.env.GITHUB_REPO || "Aviral-1/aviral-portfolio";
+      const filePath = "data/reviews.json";
+
+      if (!token) {
+        return NextResponse.json(
+          { error: "Configuration Required", details: "Please set GITHUB_TOKEN in Vercel settings to save reviews in code." },
+          { status: 501 }
+        );
+      }
+
+      try {
+        // 1. Get current file content and SHA
+        const getRes = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/vnd.github.v3+json",
+          },
+        });
+
+        if (!getRes.ok) {
+          throw new Error(`Failed to fetch file from GitHub: ${getRes.statusText}`);
+        }
+
+        const fileData = await getRes.json();
+        const sha = fileData.sha;
+        const currentContent = JSON.parse(Buffer.from(fileData.content, 'base64').toString('utf-8'));
+
+        // 2. Add new review
+        const updatedContent = [reviewData, ...currentContent];
+        const newBinaryContent = Buffer.from(JSON.stringify(updatedContent, null, 2)).toString('base64');
+
+        // 3. Commit back to GitHub
+        const putRes = await fetch(`https://api.github.com/repos/${repo}/contents/${filePath}`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/vnd.github.v3+json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            message: `feat: add new review from ${name} [skip ci]`,
+            content: newBinaryContent,
+            sha: sha,
+          }),
+        });
+
+        if (!putRes.ok) {
+          throw new Error(`Failed to commit review to GitHub: ${putRes.statusText}`);
+        }
+
+        return NextResponse.json(reviewData, { status: 201 });
+      } catch (err: any) {
+        console.error("[POST /api/reviews] GitHub Error:", err.message);
+        return NextResponse.json({ error: "Failed to save review in code.", details: err.message }, { status: 500 });
+      }
+    } else {
+      // Local development fallback: Save to local file
+      try {
+        const review = await jsonDB.addReview({
+          name,
+          role: jobTitle,
+          content: message,
+          image: profileImage,
+          linkedin: linkedinProfile,
+          email,
+        });
+        return NextResponse.json(review, { status: 201 });
+      } catch (err) {
+        return NextResponse.json({ error: "Local save failed." }, { status: 500 });
+      }
+    }
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Unknown error";
     console.error("[POST /api/reviews] Error:", msg);
-    return NextResponse.json({ error: "Failed to save review. Please ensure MONGODB_URI is correctly set in Vercel settings." }, { status: 500 });
+    return NextResponse.json({ error: "An unexpected error occurred." }, { status: 500 });
   }
 }
