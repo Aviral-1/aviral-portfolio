@@ -104,7 +104,7 @@ function ReviewForm({ onSubmitted }: ReviewFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle");
   const [submitMsg, setSubmitMsg] = useState("");
-  
+
   // msgLen is derived from form.message, keeping it as a separate state can cause double renders
   // We'll calculate it on demand or use a lighter way to show the counter.
   const msgLen = form.message.length;

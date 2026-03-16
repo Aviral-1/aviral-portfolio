@@ -4,46 +4,58 @@
    Space Grotesk + Inter + JetBrains Mono
    ============================================================ */
 
-/* =================== TOKENS (Elite Developer v5) =================== */:root {
-  /* OKLCH - Premium, Vibrant, Human-Centric Colors */
-  --bg: oklch(0.08 0.01 260);
-  --bg-soft: oklch(0.1 0.01 260);
-  --bg-alt: oklch(0.12 0.02 260);
+/* =================== TOKENS (Elite Developer v5) =================== */
+:root {
+  /* --- Emerald & Alabaster Elite Palette --- */
+  --primary: oklch(0.7 0.22 150); /* Precise Emerald Green */
+  --primary-glow: oklch(0.7 0.22 150 / 0.15);
+  --accent: oklch(0.9 0.05 150); /* Soft Mint Alabaster */
+  --accent-emerald: oklch(0.75 0.2 155);
+  --accent-purple: #a78bfa;
+  --emerald: oklch(0.75 0.2 155);
+  --cyan: oklch(0.7 0.18 200);
   
-  --primary: oklch(0.85 0.12 200); /* Luminous Cyan */
-  --primary-glow: oklch(0.85 0.12 200 / 0.25);
+  --bg: oklch(0.12 0.01 240); /* Deep Technical Slate */
+  --bg-soft: oklch(0.15 0.02 240);
+  --bg-alt: oklch(0.15 0.02 240);
+  --bg2: oklch(0.15 0.02 240);
   
-  --accent: oklch(0.7 0.25 330); /* Orchid Pink */
-  --emerald: oklch(0.8 0.2 150);
+  --text: oklch(0.98 0 0); /* Pure Alabaster */
+  --text-muted: oklch(0.65 0.01 240);
+  --text-dim: oklch(0.5 0.01 240);
   
-  --text: oklch(0.99 0.01 260);
-  --text-dim: oklch(0.75 0.01 260);
-  --text-muted: oklch(0.55 0.01 260);
+  --border: oklch(0.25 0.02 240);
+  --border-bright: oklch(0.32 0.03 240);
   
-  --border: oklch(1 0 0 / 0.06);
-  --border-bright: oklch(1 0 0 / 0.12);
-  
-  /* Ultra-Premium Glass System */
-  --glass-bg: oklch(1 0 0 / 0.02);
-  --glass-specular: oklch(1 0 0 / 0.1);
-  --glass-blur: blur(24px);
-  
+  /* --- High-Fidelity Spacing --- */
   --sp-xs: 0.5rem;
   --sp-sm: 1rem;
   --sp-md: 2rem;
   --sp-lg: 4rem;
   --sp-xl: 6rem;
+  --sp-2xl: 8rem;
   --sp-xxl: 10rem;
 
-  --r-sm: 8px;
+  /* --- Premium Radii --- */
+  --r-sm: 4px;
   --r-md: 12px;
   --r-lg: 20px;
   --r-xl: 32px;
-  
+
+  /* --- Typography --- */
+  --font-sans: 'Satoshi', 'Inter', -apple-system, sans-serif;
+  --font-inter: 'Inter', 'Satoshi', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* --- Glass --- */
+  --glass-bg: rgba(255, 255, 255, 0.025);
+  --glass-blur: blur(24px) saturate(1.4);
+
   --shadow-premium: 
     0 20px 40px -10px oklch(0 0 0 / 0.5),
     inset 0 1px 1px oklch(1 0 0 / 0.05);
 }
+
 
 
 /* =================== RESET =================== */

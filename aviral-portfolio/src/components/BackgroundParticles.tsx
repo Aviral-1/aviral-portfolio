@@ -94,7 +94,7 @@ export default function BackgroundParticles() {
           </motion.div>
         )}
       </AnimatePresence>
-      <style jsx>{`
+      <style>{`
         .ptcl-container {
           position: fixed;
           inset: 0;

@@ -1,8 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import { jsonDB, Review } from "@/lib/jsonDB";
+import fs from "fs";
+import path from "path";
 
-/* ─────────────────────────── helpers ─────────────────────────── */
+/* ── types ── */
+interface Review {
+  _id?: string;
+  name: string;
+  role?: string;
+  org?: string;
+  email?: string;
+  linkedin?: string;
+  content: string;
+  image?: string;
+  avatar?: string;
+  createdAt?: string;
+}
 
+/* ── constants ── */
+const DATA_PATH = path.join(process.cwd(), "data", "reviews.json");
+
+/* ── in-memory store (Vercel fallback) ── */
+const memoryStore: Review[] = [];
+
+/* ── helpers ── */
 function sanitize(str: unknown): string {
   if (typeof str !== "string") return "";
   return str
@@ -12,7 +32,45 @@ function sanitize(str: unknown): string {
     .trim();
 }
 
-/** In-memory rate limiter — 1 submission per IP per 60 seconds */
+async function readReviews(): Promise<Review[]> {
+  try {
+    if (!fs.existsSync(DATA_PATH)) return [];
+    const data = await fs.promises.readFile(DATA_PATH, "utf8");
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+async function writeReview(review: Review): Promise<{ saved: Review; persisted: boolean }> {
+  const newReview: Review = {
+    ...review,
+    _id: Date.now().toString(),
+    createdAt: new Date().toISOString(),
+  };
+
+  /* Try filesystem first */
+  try {
+    const dir = path.dirname(DATA_PATH);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    const reviews = await readReviews();
+    reviews.unshift(newReview);
+    const TEMP = `${DATA_PATH}.tmp`;
+    await fs.promises.writeFile(TEMP, JSON.stringify(reviews, null, 2), "utf8");
+    await fs.promises.rename(TEMP, DATA_PATH);
+    return { saved: newReview, persisted: true };
+  } catch (err) {
+    // Filesystem unavailable (Vercel read-only) — use in-memory
+    console.warn("[reviews] Filesystem write failed, using in-memory store:", err);
+    memoryStore.unshift(newReview);
+    return { saved: newReview, persisted: false };
+  }
+}
+
+/* ── Rate-limiter ── */
 const rateLimitMap = new Map<string, number>();
 const RATE_LIMIT_MS = 60_000;
 
@@ -21,43 +79,40 @@ function isRateLimited(ip: string): boolean {
   const now = Date.now();
   if (last && now - last < RATE_LIMIT_MS) return true;
   rateLimitMap.set(ip, now);
-  
-  // Cleanup old entries
   if (rateLimitMap.size > 1000) {
-    const oldestKey = rateLimitMap.keys().next().value;
-    if (oldestKey) rateLimitMap.delete(oldestKey);
+    const oldKey = rateLimitMap.keys().next().value;
+    if (oldKey) rateLimitMap.delete(oldKey);
   }
   return false;
 }
 
-/* ─────────────────────────── GET ─────────────────────────── */
-
+/* ── GET ── */
 export async function GET() {
   try {
-    const reviews = await jsonDB.getReviews();
-    return NextResponse.json(reviews, { status: 200 });
-  } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : "Unknown error";
-    console.error("[GET /api/reviews] Error:", msg);
+    const fsReviews = await readReviews();
+    // Merge memory store reviews that aren't already on disk
+    const fsIds = new Set(fsReviews.map((r) => r._id));
+    const merged = [...memoryStore.filter((r) => !fsIds.has(r._id)), ...fsReviews];
+    return NextResponse.json(merged, { status: 200 });
+  } catch {
     return NextResponse.json({ error: "Failed to fetch reviews" }, { status: 500 });
   }
 }
 
-/* ─────────────────────────── POST ─────────────────────────── */
-
+/* ── POST ── */
 export async function POST(req: NextRequest) {
   try {
-    // Rate limiting by IP
+    /* Rate limiting */
     const forwarded = req.headers.get("x-forwarded-for");
     const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
-    
     if (isRateLimited(ip)) {
       return NextResponse.json(
-        { error: "Too many submissions. Please wait 60 seconds before trying again." },
+        { error: "Too many submissions. Please wait 60 seconds and try again." },
         { status: 429 }
       );
     }
 
+    /* Parse body */
     let body: Record<string, unknown>;
     try {
       body = await req.json();
@@ -65,7 +120,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
     }
 
-    // Sanitize and Validate
+    /* Sanitize */
     const name = sanitize(body.name);
     const message = sanitize(body.message);
     const profileImage = typeof body.profileImage === "string" ? body.profileImage : "";
@@ -73,30 +128,35 @@ export async function POST(req: NextRequest) {
     const email = sanitize(body.email);
     const jobTitle = sanitize(body.jobTitle);
 
-    const errors: string[] = [];
-    if (!name || name.length < 2) errors.push("Name must be at least 2 characters.");
-    if (!message || message.length < 20) errors.push("Review must be at least 20 characters.");
-    if (message && message.length > 1000) errors.push("Review cannot exceed 1000 characters.");
-
-    if (errors.length > 0) {
-      return NextResponse.json({ error: errors.join(" ") }, { status: 422 });
+    /* Validate */
+    const errs: string[] = [];
+    if (!name || name.length < 2) errs.push("Name must be at least 2 characters.");
+    if (!message || message.length < 20) errs.push("Review must be at least 20 characters.");
+    if (message && message.length > 2000) errs.push("Review cannot exceed 2000 characters.");
+    if (errs.length) {
+      return NextResponse.json({ error: errs.join(" ") }, { status: 422 });
     }
 
-    // Save to JSON DB
-    const newReview: Review = {
+    /* Save */
+    const { saved } = await writeReview({
       name,
       content: message,
       image: profileImage,
       linkedin: linkedinProfile,
       email,
       role: jobTitle,
-    };
+    });
 
-    const saved = await jsonDB.addReview(newReview);
     return NextResponse.json(saved, { status: 201 });
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : "Unknown error";
-    console.error("[POST /api/reviews] Error:", msg);
-    return NextResponse.json({ error: "Failed to save review. Please try again." }, { status: 500 });
+    console.error("[POST /api/reviews] Unexpected error:", msg);
+    return NextResponse.json(
+      {
+        error: "Something went wrong while saving your review.",
+        details: process.env.NODE_ENV === "development" ? msg : undefined,
+      },
+      { status: 500 }
+    );
   }
 }

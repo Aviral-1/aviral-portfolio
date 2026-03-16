@@ -3,6 +3,49 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
 
+const CURSOR_STYLES = `
+  .cursor-dot-core {
+    width: 8px;
+    height: 8px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 
+      0 0 20px oklch(0.7 0.22 150 / 0.8),
+      0 0 40px oklch(0.7 0.22 150 / 0.4);
+    z-index: 2;
+  }
+  .cursor-crosshair {
+    position: absolute;
+    inset: -15px;
+    border: 1px solid oklch(0.7 0.22 150 / 0.3);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .cursor-coords {
+    position: absolute;
+    top: 30px;
+    left: 30px;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--primary);
+    opacity: 0.3;
+    white-space: nowrap;
+    letter-spacing: 0.2em;
+    font-weight: 800;
+    pointer-events: none;
+  }
+  .cursor-outer-ring {
+    width: 80px;
+    height: 80px;
+    border: 1px solid oklch(0.7 0.22 150 / 0.1);
+    background: radial-gradient(circle, oklch(0.7 0.22 150 / 0.05) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+`;
+
 export default function CustomCursor() {
   const [isTouch, setIsTouch] = useState(false);
   const cursorX = useMotionValue(-100);
@@ -39,7 +82,7 @@ export default function CustomCursor() {
       lastHoverUpdate = now;
 
       const target = e.target as HTMLElement;
-      if (target.closest("a, button, .proj-card, .skill-card")) {
+      if (target.closest("a, button, .proj-card, .skill-card, .sk-card, .feat-card, .exp-card, .carousel-card")) {
         setHovered(true);
       } else {
         setHovered(false);
@@ -63,6 +106,7 @@ export default function CustomCursor() {
 
   return (
     <AnimatePresence>
+      <style>{CURSOR_STYLES}</style>
       <div 
         style={{ 
           position: "fixed", 
@@ -109,48 +153,6 @@ export default function CustomCursor() {
           }}
         />
       </div>
-
-      <style jsx>{`
-        .cursor-dot-core {
-          width: 8px;
-          height: 8px;
-          background: #fff;
-          border-radius: 50%;
-          box-shadow: 
-            0 0 20px oklch(from var(--primary) l c h / 0.8),
-            0 0 40px oklch(from var(--primary) l c h / 0.4);
-          z-index: 2;
-        }
-        .cursor-crosshair {
-          position: absolute;
-          inset: -15px;
-          border: 1px solid oklch(from var(--primary) l c h / 0.3);
-          border-radius: 50%;
-          pointer-events: none;
-        }
-        .cursor-coords {
-          position: absolute;
-          top: 30px;
-          left: 30px;
-          font-family: var(--font-mono);
-          font-size: 0.6rem;
-          color: var(--primary);
-          opacity: 0.3;
-          white-space: nowrap;
-          letter-spacing: 0.2em;
-          font-weight: 800;
-          pointer-events: none;
-        }
-        .cursor-outer-ring {
-          width: 80px;
-          height: 80px;
-          border: 1px solid oklch(from var(--primary) l c h / 0.1);
-          background: radial-gradient(circle, oklch(from var(--primary) l c h / 0.05) 0%, transparent 70%);
-          border-radius: 50%;
-          pointer-events: none;
-          backdrop-filter: blur(2px);
-        }
-      `}</style>
     </AnimatePresence>
   );
 }
