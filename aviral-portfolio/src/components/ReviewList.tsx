@@ -162,43 +162,45 @@ function ReviewList({ reviews, isLoading = false }: ReviewListProps) {
       <style>{`
         .rl-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
-          gap: 1.5rem;
-          margin-top: 2rem;
+          grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+          gap: var(--sp-md);
+          margin-top: var(--sp-md);
         }
         .rl-card {
-          background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 18px;
+          background: rgba(10, 15, 25, 0.5);
+          backdrop-filter: blur(20px);
+          border: 1px solid var(--border);
+          border-radius: 4px;
           padding: 1.5rem;
-          backdrop-filter: blur(16px);
           position: relative;
           overflow: hidden;
           display: flex;
           flex-direction: column;
           gap: 1rem;
-          cursor: default;
-          transition: border-color 0.25s, box-shadow 0.25s;
+          transition: all 0.3s ease;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         .rl-card::before {
           content: '';
           position: absolute;
           inset: 0;
-          background: radial-gradient(ellipse at top left, rgba(6,182,212,0.06) 0%, transparent 60%);
+          background: radial-gradient(circle at 0px 0px, var(--primary-glow), transparent 70%);
+          opacity: 0.05;
           pointer-events: none;
         }
         .rl-card:hover {
-          border-color: rgba(6,182,212,0.2);
-          box-shadow: 0 8px 32px rgba(6,182,212,0.08);
+          border-color: var(--primary);
+          transform: translateY(-4px);
         }
         .rl-quote-icon {
-          color: rgba(6,182,212,0.3);
+          color: var(--primary);
+          opacity: 0.15;
           flex-shrink: 0;
         }
         .rl-message {
-          font-size: 0.9rem;
-          line-height: 1.65;
-          color: rgba(255,255,255,0.75);
+          font-size: 0.85rem;
+          line-height: 1.6;
+          color: var(--text-dim);
           flex: 1;
         }
         .rl-footer {
@@ -207,15 +209,15 @@ function ReviewList({ reviews, isLoading = false }: ReviewListProps) {
           gap: 0.75rem;
           margin-top: auto;
           padding-top: 0.75rem;
-          border-top: 1px solid rgba(255,255,255,0.06);
+          border-top: 1px solid var(--border);
         }
         .rl-img-wrap {
           flex-shrink: 0;
-          width: 44px;
-          height: 44px;
-          border-radius: 50%;
+          width: 38px;
+          height: 38px;
+          border-radius: 4px;
           overflow: hidden;
-          border: 2px solid rgba(6,182,212,0.3);
+          border: 1px solid var(--border);
         }
         .rl-img {
           width: 100%;
@@ -224,53 +226,57 @@ function ReviewList({ reviews, isLoading = false }: ReviewListProps) {
         }
         .rl-avatar {
           flex-shrink: 0;
-          width: 44px;
-          height: 44px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, rgba(6,182,212,0.2), rgba(139,92,246,0.2));
-          border: 1px solid rgba(6,182,212,0.3);
+          width: 38px;
+          height: 38px;
+          border-radius: 4px;
+          background: var(--bg-alt);
+          border: 1px solid var(--border);
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: 0.8rem;
+          font-size: 0.75rem;
           font-weight: 700;
-          color: rgba(255,255,255,0.8);
-          letter-spacing: 0.03em;
+          color: var(--primary);
+          font-family: var(--font-mono);
         }
         .rl-info { flex: 1; min-width: 0; }
         .rl-name {
-          font-size: 0.9rem;
+          font-size: 0.95rem;
           font-weight: 700;
-          color: #fff;
+          color: var(--text);
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          margin: 0;
+          margin: 0 0 2px;
         }
         .rl-role {
-          font-size: 0.775rem;
-          color: rgba(255,255,255,0.4);
+          font-size: 0.75rem;
+          color: var(--text-dim);
           display: block;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+          font-family: var(--font-mono);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
         }
         .rl-li-btn {
           flex-shrink: 0;
           width: 32px;
           height: 32px;
-          border-radius: 8px;
-          background: rgba(10,102,194,0.15);
-          border: 1px solid rgba(10,102,194,0.3);
+          border-radius: 10px;
+          background: oklch(0.6 0.2 250 / 0.1);
+          border: 1px solid oklch(0.6 0.2 250 / 0.2);
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #0a66c2;
-          transition: background 0.2s, transform 0.2s;
+          color: oklch(0.6 0.2 250);
+          transition: all 0.2s;
         }
         .rl-li-btn:hover {
-          background: rgba(10,102,194,0.3);
-          transform: scale(1.1);
+          background: oklch(0.6 0.2 250 / 0.2);
+          transform: translateY(-2px) scale(1.05);
+          color: oklch(0.7 0.2 250);
         }
         /* Skeleton styles */
         .rl-skeleton { pointer-events: none; }

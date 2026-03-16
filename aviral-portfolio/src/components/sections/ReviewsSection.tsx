@@ -89,7 +89,7 @@ export default function ReviewsSection() {
   }, [fetchReviews]);
 
   return (
-    <section id="reviews" className="section">
+    <section id="reviews" className="section u-corner">
       <motion.div className="container" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.08 }}>
         <motion.p variants={fadeUp} className="eyebrow">05 — Reviews</motion.p>
         <motion.h2 variants={fadeUp} className="sec-h2">What People Say</motion.h2>

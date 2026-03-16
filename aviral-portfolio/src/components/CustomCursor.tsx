@@ -63,24 +63,94 @@ export default function CustomCursor() {
 
   return (
     <AnimatePresence>
-      {!clicked && (
-        <motion.div
-          key="cursor-dot"
-          className="cursor-dot"
-          style={{ x: springX, y: springY, translateX: "-50%", translateY: "-50%" }}
-          animate={{ scale: hovered ? 1.5 : 1 }}
-        />
-      )}
-      <motion.div
-        key="cursor-ring"
-        className="cursor-ring"
-        style={{ x: slowX, y: slowY, translateX: "-50%", translateY: "-50%" }}
-        animate={{
-          scale: hovered ? 1.8 : clicked ? 0.8 : 1,
-          opacity: hovered ? 0.6 : 0.35,
+      <div 
+        style={{ 
+          position: "fixed", 
+          top: 0, 
+          left: 0, 
+          width: "100%", 
+          height: "100%", 
+          pointerEvents: "none", 
+          zIndex: 9999 
         }}
-        transition={{ duration: 0.2, ease: "linear" }}
-      />
+      >
+        <motion.div
+          key="cursor-main"
+          style={{ x: springX, y: springY, translateX: "-50%", translateY: "-50%", position: "absolute" }}
+        >
+          {/* Central Dot */}
+          <div className="cursor-dot-core" />
+          
+          {/* Targeting Crosshairs */}
+          <motion.div 
+            className="cursor-crosshair"
+            animate={{ 
+              rotate: hovered ? 90 : 0,
+              scale: hovered ? 1.5 : 1,
+              opacity: clicked ? 1 : 0.6
+            }}
+          />
+
+          {/* Coordinate Display */}
+          <div className="cursor-coords">
+            <motion.span>
+               X: {Math.round(cursorX.get())} Y: {Math.round(cursorY.get())}
+            </motion.span>
+          </div>
+        </motion.div>
+
+        {/* Outer Tech Ring */}
+        <motion.div
+          className="cursor-outer-ring"
+          style={{ x: slowX, y: slowY, translateX: "-50%", translateY: "-50%", position: "absolute" }}
+          animate={{
+            scale: hovered ? 1.8 : clicked ? 0.8 : 1,
+            opacity: hovered ? 0.3 : 0.1,
+          }}
+        />
+      </div>
+
+      <style jsx>{`
+        .cursor-dot-core {
+          width: 8px;
+          height: 8px;
+          background: #fff;
+          border-radius: 50%;
+          box-shadow: 
+            0 0 20px oklch(from var(--primary) l c h / 0.8),
+            0 0 40px oklch(from var(--primary) l c h / 0.4);
+          z-index: 2;
+        }
+        .cursor-crosshair {
+          position: absolute;
+          inset: -15px;
+          border: 1px solid oklch(from var(--primary) l c h / 0.3);
+          border-radius: 50%;
+          pointer-events: none;
+        }
+        .cursor-coords {
+          position: absolute;
+          top: 30px;
+          left: 30px;
+          font-family: var(--font-mono);
+          font-size: 0.6rem;
+          color: var(--primary);
+          opacity: 0.3;
+          white-space: nowrap;
+          letter-spacing: 0.2em;
+          font-weight: 800;
+          pointer-events: none;
+        }
+        .cursor-outer-ring {
+          width: 80px;
+          height: 80px;
+          border: 1px solid oklch(from var(--primary) l c h / 0.1);
+          background: radial-gradient(circle, oklch(from var(--primary) l c h / 0.05) 0%, transparent 70%);
+          border-radius: 50%;
+          pointer-events: none;
+          backdrop-filter: blur(2px);
+        }
+      `}</style>
     </AnimatePresence>
   );
 }

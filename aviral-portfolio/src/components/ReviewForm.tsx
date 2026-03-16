@@ -350,64 +350,57 @@ function ReviewForm({ onSubmitted }: ReviewFormProps) {
         /* ── Root ── */
         .rf-root {
           position: relative;
-          margin-top: 3.5rem;
-          border-radius: 24px;
+          margin-top: var(--sp-lg);
+          border-radius: 4px;
           overflow: hidden;
-          background: rgba(8, 12, 20, 0.7);
-          border: 1px solid rgba(6,182,212,0.15);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
+          background: rgba(10, 15, 25, 0.8);
+          backdrop-filter: blur(24px);
+          border: 1px solid var(--border);
+          box-shadow: 0 20px 50px -20px rgba(0,0,0,0.7);
         }
         .rf-root::before {
           content: '';
           position: absolute;
           inset: 0;
-          background:
-            radial-gradient(ellipse at 0% 0%, rgba(6,182,212,0.07) 0%, transparent 55%),
-            radial-gradient(ellipse at 100% 100%, rgba(139,92,246,0.06) 0%, transparent 55%);
+          background: radial-gradient(circle at 0px 0px, var(--primary-glow), transparent 70%);
+          opacity: 0.1;
           pointer-events: none;
         }
 
         /* ── Header ── */
         .rf-header {
-          padding: clamp(1.5rem, 3vw, 2.25rem) clamp(1.5rem, 3vw, 2.25rem) 0;
+          padding: var(--sp-md);
         }
         .rf-header-badge {
           display: inline-flex;
           align-items: center;
           gap: 0.4rem;
-          font-size: 0.72rem;
+          font-size: 0.65rem;
           font-weight: 700;
           letter-spacing: 0.1em;
           text-transform: uppercase;
-          color: #06b6d4;
-          background: rgba(6,182,212,0.1);
+          color: var(--primary);
+          background: rgba(6,182,212,0.05);
           border: 1px solid rgba(6,182,212,0.2);
-          border-radius: 999px;
-          padding: 0.25rem 0.75rem;
-          margin-bottom: 1rem;
+          border-radius: 4px;
+          padding: 0.25rem 0.6rem;
+          margin-bottom: 0.75rem;
         }
         .rf-badge-dot {
-          width: 6px; height: 6px; border-radius: 50%;
-          background: #06b6d4;
-          box-shadow: 0 0 6px #06b6d4;
-          animation: rfPulse 2s ease-in-out infinite;
-        }
-        @keyframes rfPulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(0.8); }
+          width: 5px; height: 5px; border-radius: 50%;
+          background: var(--primary);
         }
         .rf-title {
-          font-size: clamp(1.3rem, 3vw, 1.8rem);
+          font-size: 1.25rem;
           font-weight: 800;
           color: #fff;
-          margin: 0 0 0.4rem;
+          margin: 0 0 0.25rem;
           line-height: 1.2;
         }
         .rf-subtitle {
-          font-size: 0.88rem;
-          color: rgba(255,255,255,0.4);
-          margin: 0 0 1.75rem;
+          font-size: 0.8rem;
+          color: var(--text-dim);
+          margin: 0;
           line-height: 1.5;
         }
 
@@ -416,93 +409,82 @@ function ReviewForm({ onSubmitted }: ReviewFormProps) {
           display: flex;
           align-items: center;
           gap: 0.7rem;
-          padding: 0.85rem 1.25rem;
-          margin: 0 clamp(1.5rem, 3vw, 2.25rem) 1.25rem;
-          border-radius: 12px;
-          font-size: 0.875rem;
+          padding: 0.75rem 1rem;
+          margin: 0 var(--sp-md) 1rem;
+          border-radius: 2px;
+          font-size: 0.8rem;
           font-weight: 600;
         }
         .rf-toast--success {
-          background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05));
-          border: 1px solid rgba(16,185,129,0.35);
+          background: rgba(16,185,129,0.08);
+          border: 1px solid rgba(16,185,129,0.3);
           color: #34d399;
         }
         .rf-toast--error {
-          background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(239,68,68,0.04));
+          background: rgba(239,68,68,0.08);
           border: 1px solid rgba(239,68,68,0.3);
           color: #f87171;
         }
         .rf-toast-icon {
-          width: 22px; height: 22px; border-radius: 50%;
+          width: 18px; height: 18px; border-radius: 50%;
           background: currentColor;
           color: #000;
           display: flex; align-items: center; justify-content: center;
-          font-size: 0.7rem; font-weight: 900;
+          font-size: 0.6rem; font-weight: 900;
           flex-shrink: 0;
-          line-height: 1;
         }
-        .rf-toast--error .rf-toast-icon { color: #fff; background: #f87171; }
-        .rf-toast--success .rf-toast-icon { color: #fff; background: #10b981; }
 
         /* ── Form ── */
         .rf-form {
-          display: flex; flex-direction: column; gap: 1.4rem;
-          padding: 0 clamp(1.5rem, 3vw, 2.25rem) clamp(1.5rem, 3vw, 2.25rem);
+          display: flex; flex-direction: column; gap: 1rem;
+          padding: 0 var(--sp-md) var(--sp-md);
         }
 
         /* ── Avatar + Name row ── */
-        .rf-top { display: flex; gap: 1.25rem; align-items: flex-start; }
+        .rf-top { display: flex; gap: 1rem; align-items: flex-start; }
         .rf-avatar-btn { flex-shrink: 0; cursor: pointer; display: block; }
-        .rf-avatar-wrap { position: relative; width: 72px; height: 72px; border-radius: 50%; overflow: hidden; }
+        .rf-avatar-wrap { position: relative; width: 64px; height: 64px; border-radius: 4px; overflow: hidden; }
         .rf-avatar-img { width: 100%; height: 100%; object-fit: cover; }
         .rf-avatar-overlay {
           position: absolute; inset: 0;
-          background: rgba(0,0,0,0.55);
+          background: rgba(0,0,0,0.6);
           display: flex; align-items: center; justify-content: center;
-          font-size: 0.7rem; font-weight: 700; color: #fff;
+          font-size: 0.6rem; font-weight: 700; color: #fff;
           opacity: 0; transition: opacity 0.2s;
         }
         .rf-avatar-wrap:hover .rf-avatar-overlay { opacity: 1; }
         .rf-avatar-empty {
-          width: 72px; height: 72px; border-radius: 50%;
-          border: 2px dashed rgba(6,182,212,0.35);
-          background: rgba(6,182,212,0.04);
+          width: 64px; height: 64px; border-radius: 4px;
+          border: 1px solid var(--border);
+          background: rgba(255,255,255,0.03);
           display: flex; flex-direction: column;
           align-items: center; justify-content: center;
-          gap: 3px; color: rgba(255,255,255,0.3);
-          transition: border-color 0.2s, color 0.2s, background 0.2s;
+          gap: 3px; color: var(--text-muted);
         }
-        .rf-avatar-btn:hover .rf-avatar-empty {
-          border-color: rgba(6,182,212,0.65);
-          color: rgba(255,255,255,0.65);
-          background: rgba(6,182,212,0.08);
-        }
-        .rf-avatar-hint { font-size: 0.62rem; }
-        .rf-name-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1.1rem; }
+        .rf-avatar-hint { font-size: 0.55rem; }
+        .rf-name-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.75rem; }
 
         /* ── Two cols row ── */
-        .rf-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+        .rf-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
         /* ── Floating label field ── */
         .ff-wrap {
           position: relative;
-          padding-top: 0.85rem;
+          padding-top: 0.75rem;
         }
         .ff-label {
           position: absolute;
-          left: 0.9rem;
-          top: calc(0.85rem + 0.75rem);
-          font-size: 0.875rem;
-          color: rgba(255,255,255,0.35);
+          left: 0.75rem;
+          top: calc(0.75rem + 0.65rem);
+          font-size: 0.85rem;
+          color: var(--text-dim);
           pointer-events: none;
-          transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-          white-space: nowrap;
-          transform-origin: left;
+          transition: all 0.2s ease;
         }
         .ff-label--up {
           top: 0;
-          font-size: 0.7rem;
-          color: #06b6d4;
+          font-size: 0.6rem;
+          color: var(--primary);
           font-weight: 600;
           letter-spacing: 0.04em;
           text-transform: uppercase;
@@ -510,162 +492,96 @@ function ReviewForm({ onSubmitted }: ReviewFormProps) {
         .ff-req { color: #f87171; }
         .ff-input {
           width: 100%;
-          box-sizing: border-box;
-          background: rgba(255,255,255,0.035);
-          border: 1px solid rgba(255,255,255,0.09);
-          border-bottom: none;
-          border-radius: 10px 10px 0 0;
-          padding: 0.7rem 0.9rem;
-          padding-top: 0.9rem;
+          background: rgba(255,255,255,0.02);
+          border: 1px solid var(--border);
+          border-radius: 2px;
+          padding: 0.6rem 0.75rem;
           color: #fff;
-          font-size: 0.9rem;
-          font-family: inherit;
+          font-size: 0.85rem;
           outline: none;
-          transition: background 0.2s;
         }
-        .ff-input--active, .ff-input:focus {
-          background: rgba(6,182,212,0.04);
-        }
-        .ff-bar {
-          height: 2px;
-          background: rgba(255,255,255,0.09);
-          border-radius: 0 0 10px 10px;
-          transition: background 0.2s;
-        }
-        .ff-bar--active { background: #06b6d4; }
-        .ff-bar--err { background: #f87171; }
-        .ff-wrap--err .ff-label--up { color: #f87171; }
-        .ff-wrap--err .ff-input { background: rgba(239,68,68,0.04); }
-        .ff-err {
-          display: block;
-          font-size: 0.75rem;
-          color: #f87171;
-          margin-top: 0.3rem;
-          padding-left: 0.1rem;
-        }
+        .ff-input:focus { border-color: var(--primary); background: rgba(255,255,255,0.03); }
+        .ff-bar { display: none; }
+        .ff-err { font-size: 0.7rem; color: #f87171; margin-top: 0.25rem; }
 
         /* ── Textarea ── */
         .rf-msg-wrap {
           position: relative;
-          padding-top: 0.85rem;
-          background: rgba(255,255,255,0.035);
-          border: 1px solid rgba(255,255,255,0.09);
-          border-radius: 12px;
-          transition: border-color 0.2s, background 0.2s;
+          padding-top: 0.75rem;
+          background: rgba(255,255,255,0.02);
+          border: 1px solid var(--border);
+          border-radius: 2px;
         }
-        .rf-msg-wrap--focus {
-          background: rgba(6,182,212,0.04);
-          border-color: rgba(6,182,212,0.3);
-          box-shadow: 0 0 0 3px rgba(6,182,212,0.08);
-        }
-        .rf-msg-wrap--err {
-          border-color: rgba(239,68,68,0.4);
-        }
-        .rf-msg-wrap--err.rf-msg-wrap--focus {
-          box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
-        }
+        .rf-msg-wrap--focus { border-color: var(--primary); background: rgba(255,255,255,0.03); }
         .rf-msg-label {
           position: absolute;
-          left: 0.9rem;
-          top: calc(0.85rem + 0.8rem);
-          font-size: 0.875rem;
-          color: rgba(255,255,255,0.35);
+          left: 0.75rem;
+          top: calc(0.75rem + 0.65rem);
+          font-size: 0.85rem;
+          color: var(--text-dim);
           pointer-events: none;
-          transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+          transition: all 0.2s ease;
         }
         .rf-msg-label--up {
-          top: 0.3rem;
-          font-size: 0.7rem;
-          color: #06b6d4;
+          top: 0.15rem;
+          font-size: 0.6rem;
+          color: var(--primary);
           font-weight: 600;
           letter-spacing: 0.04em;
           text-transform: uppercase;
         }
-        .rf-msg-wrap--err .rf-msg-label--up { color: #f87171; }
         .rf-textarea {
           width: 100%;
-          box-sizing: border-box;
           background: transparent;
           border: none;
           outline: none;
           resize: none;
           color: #fff;
-          font-size: 0.9rem;
-          font-family: inherit;
-          line-height: 1.65;
-          padding: 0.4rem 0.9rem 0.4rem;
-          min-height: 110px;
+          font-size: 0.85rem;
+          padding: 0.5rem 0.75rem 0;
+          min-height: 90px;
         }
-        .rf-textarea::placeholder { color: rgba(255,255,255,0.2); }
         .rf-msg-footer {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 0.4rem 0.9rem 0.6rem;
-          min-height: 28px;
+          padding: 0.25rem 0.75rem 0.5rem;
         }
-        .rf-counter { position: relative; display: flex; align-items: center; justify-content: center; margin-left: auto; }
-        .rf-counter-num {
-          position: absolute;
-          font-size: 0.55rem;
-          font-weight: 700;
-          font-variant-numeric: tabular-nums;
-        }
+        .rf-counter { position: relative; display: flex; align-items: center; justify-content: center; }
+        .rf-counter-num { position: absolute; font-size: 0.5rem; font-weight: 700; }
 
         /* ── Submit row ── */
-        .rf-submit-row {
-          display: flex;
-          align-items: center;
-          gap: 1.25rem;
-          flex-wrap: wrap;
-        }
+        .rf-submit-row { display: flex; align-items: center; gap: 1rem; }
         .rf-btn {
           display: inline-flex;
           align-items: center;
           gap: 0.5rem;
-          padding: 0.75rem 1.75rem;
-          background: linear-gradient(135deg, #06b6d4, #0891b2);
+          padding: 0.65rem 1.5rem;
+          background: var(--bg-alt);
+          border: 1px solid var(--border);
           color: #fff;
           font-weight: 700;
-          font-size: 0.9rem;
-          font-family: inherit;
-          border: none;
-          border-radius: 12px;
+          font-size: 0.85rem;
+          border-radius: 4px;
           cursor: pointer;
-          transition: transform 0.18s, box-shadow 0.18s, opacity 0.18s;
-          box-shadow: 0 4px 20px rgba(6,182,212,0.3);
-          white-space: nowrap;
-          will-change: transform;
+          transition: all 0.2s ease;
         }
-        .rf-btn:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 28px rgba(6,182,212,0.4);
-        }
-        .rf-btn:active:not(:disabled) {
-          transform: translateY(0) scale(0.98);
-        }
-        .rf-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+        .rf-btn:hover:not(:disabled) { border-color: var(--primary); background: rgba(255,255,255,0.03); }
+        .rf-btn:disabled { opacity: 0.4; }
         .rf-spinner {
-          width: 14px; height: 14px;
-          border: 2px solid rgba(255,255,255,0.3);
-          border-top-color: #fff;
+          width: 12px; height: 12px;
+          border: 2px solid rgba(255,255,255,0.2);
+          border-top-color: var(--primary);
           border-radius: 50%;
           animation: rfSpin 0.7s linear infinite;
-          will-change: transform;
         }
         @keyframes rfSpin { to { transform: rotate(360deg); } }
-        .rf-privacy {
-          font-size: 0.75rem;
-          color: rgba(255,255,255,0.3);
-          margin: 0;
-        }
 
         /* ── Responsive ── */
         @media (max-width: 600px) {
-          .rf-top { flex-direction: column; align-items: center; }
+          .rf-top { flex-direction: column; align-items: flex-start; }
           .rf-name-col { width: 100%; }
           .rf-row-2 { grid-template-columns: 1fr; }
-          .rf-submit-row { flex-direction: column; align-items: flex-start; }
         }
       `}</style>
     </div>

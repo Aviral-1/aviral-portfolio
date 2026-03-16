@@ -62,8 +62,12 @@ export function MagneticBtn({
 export function AuroraBg() {
   return (
     <div className="aurora-bg" aria-hidden>
+      <div className="noise-overlay" />
+      <div className="scanlines" />
       <div className="aurora-blob a1" />
       <div className="aurora-blob a2" />
+      <div className="aurora-blob a3" />
+      <div className="aurora-blob a4" />
       <div className="grid-overlay" />
     </div>
   );
@@ -118,8 +122,30 @@ export function TiltCard({ children, className }: { children: React.ReactNode, c
 }
 
 /* ========== ANIMATION VARIANTS ========== */
-export const ease = [0.16, 1, 0.3, 1] as [number, number, number, number];
-export const fadeUp = { hidden: { opacity: 0, y: 48 }, show: { opacity: 1, y: 0, transition: { duration: 0.8, ease } } };
-export const fadeIn = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { duration: 0.6 } } };
-export const stagger = { hidden: {}, show: { transition: { staggerChildren: 0.1 } } };
-export const scaleIn = { hidden: { opacity: 0, scale: 0.88 }, show: { opacity: 1, scale: 1, transition: { duration: 0.65, ease } } };
+export const ease = [0.22, 1, 0.36, 1] as [number, number, number, number]; // Quintic easeOut
+export const liquid = [0.76, 0, 0.24, 1] as [number, number, number, number]; // Cinematic Liquid
+
+export const fadeUp = { 
+  hidden: { opacity: 0, y: 60, filter: "blur(10px)" }, 
+  show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 1.2, ease } } 
+};
+
+export const fadeIn = { 
+  hidden: { opacity: 0, filter: "blur(5px)" }, 
+  show: { opacity: 1, filter: "blur(0px)", transition: { duration: 1, ease } } 
+};
+
+export const stagger = { 
+  hidden: {}, 
+  show: { transition: { staggerChildren: 0.15, delayChildren: 0.1 } } 
+};
+
+export const scaleIn = { 
+  hidden: { opacity: 0, scale: 0.9, filter: "blur(10px)" }, 
+  show: { opacity: 1, scale: 1, filter: "blur(0px)", transition: { duration: 1, ease } } 
+};
+
+export const liquidReveal = {
+  hidden: { clipPath: "polygon(0 0, 0 0, 0 100%, 0% 100%)", opacity: 0 },
+  show: { clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)", opacity: 1, transition: { duration: 1.4, ease: liquid } }
+};
